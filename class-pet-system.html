@@ -1,0 +1,2266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>班级宠物园 · A1-1班</title>
+<style>
+:root {
+  --coral: #D85A30; --coral-bg: #FAECE7; --coral-dark: #993C1D;
+  --blue: #378ADD; --blue-bg: #E6F1FB; --blue-dark: #185FA5;
+  --green: #639922; --green-bg: #EAF3DE; --green-dark: #3B6D11;
+  --amber: #EF9F27; --amber-bg: #FAEEDA; --amber-dark: #854F0B;
+  --teal: #1D9E75; --teal-bg: #E1F5EE; --teal-dark: #0F6E56;
+  --purple: #7F77DD; --purple-bg: #EEEDFE; --purple-dark: #534AB7;
+  --pink: #D4537E; --pink-bg: #FBEAF0; --pink-dark: #993556;
+  --red: #E24B4A; --red-bg: #FCEBEB; --red-dark: #A32D2D;
+  --gray-50: #F1EFE8; --gray-100: #E0DED5; --gray-200: #D3D1C7; --gray-400: #B4B2A9;
+  --gray-500: #888780; --gray-600: #5F5E5A; --gray-700: #444441; --gray-800: #2C2C2A;
+  --bg: #FAFAF8; --card: #FFFFFF; --border: #E0DED5;
+  --radius: 12px; --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--gray-800); line-height: 1.6; }
+button { cursor: pointer; font-family: inherit; }
+button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+.app { max-width: 960px; margin: 0 auto; padding: 16px 20px 40px; }
+
+.header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-left h1 { font-size: 18px; font-weight: 500; }
+.header-left .sub { font-size: 12px; color: var(--gray-500); }
+.pin-badge { display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 6px 14px; border-radius: 20px; border: 0.5px solid var(--border); background: var(--card); font-weight: 500; }
+.pin-badge.locked { color: var(--red-dark); border-color: var(--red); background: var(--red-bg); }
+.pin-badge.unlocked { color: var(--green-dark); border-color: var(--green); background: var(--green-bg); }
+.pin-badge .dot { width: 8px; height: 8px; border-radius: 50%; }
+.pin-badge.locked .dot { background: var(--red); }
+.pin-badge.unlocked .dot { background: var(--green); }
+/* Sync status badge */
+.sync-badge { display: flex; align-items: center; gap: 4px; font-size: 11px; padding: 4px 10px; border-radius: 12px; border: 0.5px solid var(--border); font-weight: 500; cursor: pointer; transition: all 0.2s; }
+.sync-badge:hover { border-color: var(--blue); }
+.sync-local { background: var(--gray-50); color: var(--gray-500); }
+.sync-syncing { background: var(--blue-bg); color: var(--blue-dark); animation: syncPulse 1.5s ease-in-out infinite; }
+.sync-synced { background: var(--green-bg); color: var(--green-dark); }
+.sync-error { background: var(--red-bg); color: var(--red-dark); }
+@keyframes syncPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+/* Teacher login modal */
+.teacher-list { max-height: 200px; overflow-y: auto; border: 0.5px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 12px; }
+.teacher-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; border-bottom: 0.5px solid var(--border); transition: background 0.1s; }
+.teacher-item:last-child { border-bottom: none; }
+.teacher-item:hover { background: var(--coral-bg); }
+.teacher-item .t-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--coral); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; flex-shrink: 0; }
+.teacher-item .t-name { font-size: 13px; font-weight: 500; }
+.teacher-item .t-role { font-size: 10px; color: var(--gray-500); }
+/* Point history */
+.point-log-row { font-size: 12px; }
+.point-log-row td { vertical-align: top; padding: 6px 10px; }
+.point-log-pos { color: var(--green-dark); font-weight: 500; }
+.point-log-neg { color: var(--red-dark); font-weight: 500; }
+.point-log-teacher { font-size: 10px; color: var(--gray-500); background: var(--gray-50); padding: 2px 8px; border-radius: 10px; }
+.point-log-revoked { text-decoration: line-through; color: var(--gray-400) !important; opacity: 0.5; }
+.point-log-revoked .point-log-pos { color: var(--gray-400) !important; }
+.revoke-btn { font-size: 11px; padding: 3px 8px; border: 1px solid var(--red); color: var(--red); background: transparent; border-radius: 4px; cursor: pointer; white-space: nowrap; transition: all 0.15s; }
+.revoke-btn:hover { background: var(--red); color: white; }
+
+.tabs { display: flex; gap: 0; border-bottom: 0.5px solid var(--border); margin-bottom: 16px; background: var(--card); border-radius: var(--radius) var(--radius) 0 0; padding: 0 8px; }
+.tab-btn { font-size: 13px; font-weight: 500; padding: 10px 18px; border: none; background: transparent; color: var(--gray-500); border-bottom: 2px solid transparent; transition: all 0.15s; }
+.tab-btn:hover { color: var(--gray-700); }
+.tab-btn.active { color: var(--coral); border-bottom-color: var(--coral); }
+.tab-btn .badge-num { display: inline-block; font-size: 10px; background: var(--red-bg); color: var(--red-dark); border-radius: 10px; padding: 1px 7px; margin-left: 4px; font-weight: 500; }
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+.card { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 14px; }
+.card-header { font-size: 14px; font-weight: 500; margin-bottom: 14px; color: var(--gray-700); }
+
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+
+.pet-card { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; cursor: pointer; transition: border-color 0.15s; }
+.pet-card:hover { border-color: var(--coral); }
+.pet-card .pet-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.pet-card .pet-avatar { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow:hidden; background:transparent; }
+.pet-card .pet-info { flex: 1; min-width: 0; }
+.pet-card .pet-name { font-size: 13px; font-weight: 500; }
+.pet-card .pet-owner { font-size: 11px; color: var(--gray-500); }
+.pet-card .pet-stats { display: flex; flex-direction: column; gap: 4px; }
+.pet-card .stat-row { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--gray-500); }
+.pet-card .stat-row .bar { flex: 1; height: 4px; background: var(--gray-50); border-radius: 2px; overflow: hidden; }
+.pet-card .stat-row .bar-fill { height: 100%; border-radius: 2px; }
+.pet-card .pet-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 10px; color: var(--gray-500); }
+.rarity-tag { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+.rarity-common { background: var(--gray-50); color: var(--gray-600); }
+.rarity-rare { background: var(--blue-bg); color: var(--blue-dark); }
+.rarity-epic { background: var(--purple-bg); color: var(--purple-dark); }
+.rarity-legendary { background: var(--amber-bg); color: var(--amber-dark); }
+
+.student-section { margin-bottom: 24px; }
+.student-section .student-header { font-size: 14px; font-weight: 500; color: var(--gray-700); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.student-section .student-points { font-size: 12px; color: var(--gray-500); }
+
+.btn { font-size: 13px; padding: 8px 18px; border-radius: var(--radius-sm); border: 0.5px solid var(--border); background: var(--card); color: var(--gray-700); font-weight: 500; }
+.btn:hover { border-color: var(--gray-400); }
+.btn-primary { background: var(--coral); color: #fff; border-color: var(--coral); }
+.btn-primary:hover { background: var(--coral-dark); }
+.btn-sm { font-size: 11px; padding: 4px 12px; }
+.btn-green { background: var(--green); color: #fff; border-color: var(--green); }
+.btn-red { background: var(--red); color: #fff; border-color: var(--red); }
+.btn-blue { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+select, input[type="text"], input[type="password"], input[type="number"] {
+  font-size: 13px; padding: 7px 12px; border: 0.5px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--card); color: var(--gray-800); font-family: inherit; outline: none;
+}
+select:focus, input:focus { border-color: var(--coral); }
+
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 100; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--card); border-radius: var(--radius); padding: 24px; max-width: 520px; width: 90%; max-height: 80vh; overflow-y: auto; }
+.modal h3 { font-size: 16px; font-weight: 500; margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+.flex-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.gap-sm { gap: 6px; }
+.gap-md { gap: 12px; }
+.mt-sm { margin-top: 8px; }
+.mt-md { margin-top: 14px; }
+.mb-sm { margin-bottom: 8px; }
+.mb-md { margin-bottom: 14px; }
+.text-sm { font-size: 12px; }
+.text-xs { font-size: 10px; }
+.text-muted { color: var(--gray-500); }
+.text-center { text-align: center; }
+
+.progress-bar { height: 8px; background: var(--gray-50); border-radius: 4px; overflow: hidden; }
+.progress-bar .fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+
+.stat-item { flex: 1; min-width: 100px; }
+.stat-item label { font-size: 11px; color: var(--gray-500); display: block; margin-bottom: 2px; }
+.stat-item .val { font-size: 18px; font-weight: 500; }
+
+.evo-track { display: flex; align-items: center; gap: 0; margin: 12px 0; }
+.evo-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--gray-200); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; background: var(--card); }
+.evo-dot.done { background: var(--green); border-color: var(--green); color: #fff; }
+.evo-dot.current { border-color: var(--coral); color: var(--coral); font-weight: 500; }
+.evo-line { flex: 1; height: 2px; background: var(--gray-100); min-width: 8px; }
+.evo-line.done { background: var(--green); }
+
+.accessory-slot { width: 40px; height: 40px; border: 1px dashed var(--gray-200); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.accessory-slot.equipped { border-style: solid; border-color: var(--coral); background: var(--coral-bg); }
+
+.blindbox-card { text-align: center; padding: 16px; border: 2px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all 0.2s; }
+
+/* 批量恢复面板 */
+.recovery-panel { background: var(--amber-bg); border: 1px solid var(--amber-dark); border-radius: var(--radius); padding: 16px; margin-top: 16px; }
+.recovery-panel h4 { font-size: 14px; margin-bottom: 8px; color: var(--amber-dark); }
+.recovery-tabs { display: flex; gap: 0; margin-bottom: 12px; }
+.recovery-tab { font-size: 12px; padding: 6px 14px; border: 1px solid var(--border); background: var(--card); color: var(--gray-600); cursor: pointer; }
+.recovery-tab:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.recovery-tab:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.recovery-tab.active { background: var(--amber-dark); color: #fff; border-color: var(--amber-dark); }
+.recovery-textarea { width: 100%; min-height: 120px; font-family: 'Courier New', monospace; font-size: 12px; padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); resize: vertical; }
+.recovery-preview { max-height: 200px; overflow-y: auto; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; margin-top: 8px; }
+.recovery-preview table { width: 100%; font-size: 11px; }
+.recovery-preview th { position: sticky; top: 0; background: var(--gray-50); font-size: 10px; padding: 4px 6px; text-align: left; }
+.recovery-preview td { padding: 3px 6px; border-top: 1px solid var(--gray-50); }
+.recovery-preview .row-error { background: #fff0f0; color: var(--red); }
+.recovery-preview .row-ok { }
+.blindbox-card:hover { border-color: var(--coral); transform: translateY(-2px); }
+.blindbox-card .box-icon { font-size: 40px; margin-bottom: 8px; }
+.blindbox-card .box-name { font-size: 14px; font-weight: 500; }
+.blindbox-card .box-price { font-size: 12px; color: var(--gray-500); margin-top: 4px; }
+.blindbox-card .box-odds { font-size: 10px; color: var(--gray-400); margin-top: 4px; }
+
+.result-banner { text-align: center; padding: 20px; border-radius: var(--radius); margin-bottom: 12px; }
+.result-banner .result-icon { font-size: 48px; margin-bottom: 8px; }
+.result-banner .result-name { font-size: 16px; font-weight: 500; }
+
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 10px 24px; border-radius: 20px; font-size: 13px; font-weight: 500; z-index: 200; animation: toastIn 0.3s ease; }
+.toast.success { background: var(--green); color: #fff; }
+.toast.error { background: var(--red); color: #fff; }
+.toast.info { background: var(--blue); color: #fff; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+.empty-state { text-align: center; padding: 40px 20px; color: var(--gray-400); }
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 10px; }
+.empty-state p { font-size: 13px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { font-size: 11px; font-weight: 500; text-align: left; padding: 8px 12px; color: var(--gray-500); border-bottom: 1px solid var(--border); background: var(--gray-50); }
+td { padding: 8px 12px; border-bottom: 0.5px solid var(--border); }
+
+.pet-detail-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.action-btn { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 10px 16px; border-radius: var(--radius-sm); border: 0.5px solid var(--border); background: var(--card); }
+.action-btn .cost { font-size: 11px; color: var(--gray-500); margin-left: auto; }
+
+.shop-item { border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+.shop-item .item-icon { font-size: 28px; margin-bottom: 6px; }
+.shop-item .item-name { font-size: 12px; font-weight: 500; }
+.shop-item .item-price { font-size: 11px; color: var(--gray-500); }
+.shop-item .item-slot { font-size: 10px; color: var(--gray-400); }
+
+/* === 宠物交互动画 === */
+#petAnimTarget img { transition: transform 0.15s ease; }
+#petAnimTarget.anim-feed img { animation: petBounce 0.5s ease; }
+#petAnimTarget.anim-play img { animation: petWiggle 0.5s ease; }
+#petAnimTarget.anim-clean img { animation: petShake 0.4s ease; }
+#petAnimTarget.anim-heal img { animation: petPulse 0.6s ease; }
+
+@keyframes petBounce {
+  0%,100% { transform: translateY(0); }
+  20% { transform: translateY(-12px); }
+  40% { transform: translateY(0); }
+  60% { transform: translateY(-6px); }
+  80% { transform: translateY(0); }
+}
+@keyframes petWiggle {
+  0%,100% { transform: rotate(0) translateX(0); }
+  15% { transform: rotate(-8deg) translateX(-4px); }
+  35% { transform: rotate(8deg) translateX(4px); }
+  55% { transform: rotate(-6deg) translateX(-2px); }
+  75% { transform: rotate(6deg) translateX(2px); }
+}
+@keyframes petShake {
+  0%,100% { transform: translateX(0); }
+  10% { transform: translateX(-6px); }
+  20% { transform: translateX(6px); }
+  30% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  50% { transform: translateX(-3px); }
+  60% { transform: translateX(3px); }
+  70% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+@keyframes petPulse {
+  0%,100% { transform: scale(1); filter: brightness(1); }
+  30% { transform: scale(1.15); filter: brightness(1.3) drop-shadow(0 0 8px gold); }
+  60% { transform: scale(0.95); filter: brightness(1.1) drop-shadow(0 0 4px gold); }
+}
+/* === 飘出粒子 === */
+.particle-container { position: relative; }
+.particle-feed { position: absolute; animation: particleUp 0.8s ease-out forwards; font-size: 20px; pointer-events: none; }
+.particle-play { position: absolute; animation: particleUp 0.8s ease-out forwards; font-size: 20px; pointer-events: none; }
+.particle-clean { position: absolute; animation: particleUp 0.8s ease-out forwards; font-size: 20px; pointer-events: none; }
+.particle-heal { position: absolute; animation: particleUp 0.8s ease-out forwards; font-size: 20px; pointer-events: none; }
+@keyframes particleUp {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  50% { opacity: 1; transform: translateY(-30px) scale(1.2); }
+  100% { opacity: 0; transform: translateY(-60px) scale(0.5); }
+}
+
+/* === 积分规则弹窗 === */
+#rulesModal .modal { padding: 20px 24px 24px; }
+.rules-section { margin-top: 16px; }
+.rules-section h4 { font-size: 14px; font-weight: 500; margin-bottom: 8px; color: var(--gray-800); }
+.rules-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.rules-table th { background: var(--gray-50); padding: 7px 8px; text-align: left; font-weight: 500; font-size: 11px; color: var(--gray-600); border-bottom: 1px solid var(--border); }
+.rules-table td { padding: 6px 8px; border-bottom: 0.5px solid var(--border); color: var(--gray-700); }
+.rules-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.rules-card { background: var(--gray-50); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+.rules-card strong { display: block; font-size: 12px; margin: 4px 0; }
+.rules-card p { font-size: 11px; margin: 0; line-height: 1.4; }
+.rules-icon { font-size: 22px; display: block; margin-bottom: 2px; }
+@media (max-width: 640px) { .rules-grid { grid-template-columns: 1fr; } }
+
+@media (max-width: 640px) {
+  .app { padding: 10px; }
+  .grid-3 { grid-template-columns: 1fr; }
+  .tabs { overflow-x: auto; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+<div class="header">
+  <div class="header-left">
+    <h1>🐾 班级宠物园</h1>
+    <span class="sub">A1-1班 · 13人</span>
+  </div>
+  <div class="flex-row gap-sm">
+    <button class="sync-badge sync-local" id="syncStatus" onclick="cloudPull()" title="点击手动同步">💻 本地</button>
+    <button class="btn btn-sm" onclick="toggleRules()" style="background:var(--amber-bg);color:var(--amber-dark);border-color:var(--amber-dark)">📋 积分规则</button>
+    <button class="pin-badge locked" id="pinBadge" style="gap:4px">
+      <span class="dot"></span>
+      <span id="pinLabel">未登录</span>
+    </button>
+  </div>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab-btn active" data-tab="0">班级全景</button>
+  <button class="tab-btn" data-tab="1">积分中心</button>
+  <button class="tab-btn" data-tab="2">盲盒商店</button>
+  <button class="tab-btn" data-tab="3">饰品商店</button>
+  <button class="tab-btn" data-tab="4">领养中心 <span class="badge-num" id="adoptCount" style="display:none">0</span></button>
+  <button class="tab-btn" data-tab="5">⚙ 设置</button>
+</div>
+
+<div class="panel active" id="panel-0">
+  <div id="panoramaContent"></div>
+</div>
+
+<div class="panel" id="panel-1">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+    <span></span>
+    <button class="btn btn-sm" style="background:var(--amber-bg);color:var(--amber-dark);border-color:var(--amber-dark)" onclick="document.getElementById('pointHistoryModal').classList.add('show');renderPointHistory()">📊 积分历史查询</button>
+  </div>
+  <div class="card">
+    <div class="card-header">教师直接奖励</div>
+    <div class="flex-row gap-md">
+      <select id="awardStudent"><option value="">选择学生</option></select>
+      <select id="awardDimension">
+        <option value="">选择维度</option>
+        <option value="academic">学术参与 +1~3</option>
+        <option value="collaboration">协作能力 +1~3</option>
+        <option value="service">社区服务 +2~5</option>
+        <option value="leadership">领导力 +3~5</option>
+        <option value="growth">成长心态 +1~2</option>
+      </select>
+      <select id="awardPoints"><option value="">分值</option></select>
+      <button class="btn btn-primary" id="btnDirectAward" disabled onclick="directAward()">确认加分</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">同伴提名 · 待审核 <span style="font-size:12px;color:var(--gray-500)">（学生提交后在此审核）</span></div>
+    <div id="pendingNominations"><p class="text-sm text-muted">暂无待审核提名</p></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">自我申报 · 待审核</div>
+    <div id="pendingSelfReports"><p class="text-sm text-muted">暂无待审核申报</p></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">积分排行榜</div>
+    <div id="leaderboard"></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-2">
+  <div class="card">
+    <div class="card-header">🎁 盲盒商店</div>
+    <p class="text-sm text-muted mb-md">选择学生后开盒，积分从该学生账户扣除。稀有度决定宠物外观品质。</p>
+    <div class="flex-row gap-md mb-md">
+      <span class="text-sm">为谁开盒：</span>
+      <select id="boxStudent"><option value="">选择学生</option></select>
+    </div>
+    <div class="grid-3" id="blindboxGrid"></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-3">
+  <div class="card">
+    <div class="card-header">💎 饰品商店</div>
+    <p class="text-sm text-muted mb-md">选择学生的某只宠物后购买饰品装扮。已购买饰品可随时换装不花钱。</p>
+    <div class="flex-row gap-md mb-md">
+      <span class="text-sm">目标宠物：</span>
+      <select id="accStudent"><option value="">选择学生</option></select>
+      <select id="accPet"><option value="">先选学生</option></select>
+    </div>
+    <div id="accessoryShop"></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-4">
+  <div class="card">
+    <div class="card-header">🏠 领养中心</div>
+    <p class="text-sm text-muted mb-md">被弃养的宠物在此等待 48 小时，其他人可花比盲盒便宜的价格领养。</p>
+    <div id="adoptionCenter">
+      <div class="empty-state">
+        <div class="empty-icon">🏠</div>
+        <p>领养中心暂无宠物</p>
+        <p class="text-xs text-muted mt-sm">有宠物被弃养后会出现在这里</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel-5">
+  <div class="card">
+    <div class="card-header">⚙ 系统设置</div>
+    <div class="flex-row gap-md mb-md">
+      <button class="btn btn-blue" onclick="document.getElementById('pointHistoryModal').classList.add('show');renderPointHistory()">📊 积分历史查询</button>
+    </div>
+    <div class="card-header" style="margin-top:16px">👩‍🏫 教师账户管理 <span class="text-xs text-muted">（管理员功能）</span></div>
+    <div id="teacherMgr" class="mb-md"></div>
+    <div class="flex-row gap-sm mb-md" style="flex-wrap:wrap">
+      <input type="text" id="newTeacherUser" placeholder="账号（英文）" style="width:120px">
+      <input type="text" id="newTeacherName" placeholder="显示名（中文）" style="width:120px">
+      <input type="password" id="newTeacherPwd" placeholder="初始密码" style="width:100px">
+      <label class="text-xs"><input type="checkbox" id="newTeacherAdmin"> 管理员</label>
+      <button class="btn btn-sm btn-green" onclick="addTeacher()">新增教师</button>
+    </div>
+    <div class="flex-row gap-md mt-md">
+      <button class="btn btn-blue" onclick="exportData()">导出数据备份</button>
+      <button class="btn" onclick="document.getElementById('importFile').click()">导入数据恢复</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn btn-red btn-sm" onclick="resetAll()">重置全部数据</button>
+    </div>
+    <p class="text-xs text-muted mt-md">建议每周导出一次备份。重置将清除所有学生、宠物、积分数据。</p>
+
+    <!-- 批量恢复积分（管理员） -->
+    <div class="recovery-panel" id="recoveryPanel">
+      <h4>📥 批量恢复积分 <span class="text-xs" style="font-weight:400;color:var(--gray-500)">（管理员 · 丢失数据时可手动补录）</span></h4>
+      <div class="recovery-tabs">
+        <button class="recovery-tab active" onclick="switchRecoveryTab('batch')" id="recTabBatch">📋 JSON批量导入</button>
+        <button class="recovery-tab" onclick="switchRecoveryTab('single')" id="recTabSingle">✏️ 单条快速补录</button>
+      </div>
+      <!-- JSON 批量导入 -->
+      <div id="recBatch">
+        <p class="text-xs text-muted mb-sm">粘贴 JSON 数组，每行一个学生的加分记录。格式：</p>
+        <code class="text-xs" style="display:block;background:var(--gray-50);padding:6px 10px;border-radius:4px;margin-bottom:8px;white-space:pre-wrap;line-height:1.6">[{"name":"Davis","dim":"academic","pts":3,"note":"课堂发言","date":"2026-06-22"}]</code>
+        <p class="text-xs text-muted mb-sm">dim 可选：academic(学术) / collaboration(协作) / service(服务) / leadership(领导力) / growth(成长)。date 不填则默认今天。</p>
+        <textarea class="recovery-textarea" id="recoveryJsonInput" placeholder='[{"name":"Davis","dim":"academic","pts":3,"note":"课堂发言","date":"2026-06-22"}]'></textarea>
+        <div class="flex-row gap-sm mt-sm">
+          <button class="btn btn-sm btn-blue" onclick="previewBatchImport()">🔍 预览</button>
+          <button class="btn btn-sm btn-green" onclick="executeBatchImport()" id="btnExecImport" disabled>✅ 确认导入</button>
+          <span id="recoveryStatus" class="text-xs text-muted"></span>
+        </div>
+        <div class="recovery-preview" id="recoveryPreview" style="display:none"></div>
+      </div>
+      <!-- 单条快速补录 -->
+      <div id="recSingle" style="display:none">
+        <div class="flex-row gap-sm" style="flex-wrap:wrap">
+          <select id="recSingleStudent" style="width:100px"><option value="">学生</option></select>
+          <select id="recSingleDim" style="width:100px"><option value="">维度</option><option value="academic">📖 学术</option><option value="collaboration">🤝 协作</option><option value="service">💝 服务</option><option value="leadership">👑 领导力</option><option value="growth">🌱 成长</option></select>
+          <input type="number" id="recSinglePts" placeholder="分数" style="width:70px" min="1" max="10">
+          <input type="text" id="recSingleNote" placeholder="备注" style="width:140px">
+          <input type="date" id="recSingleDate" style="width:130px">
+          <button class="btn btn-sm btn-green" onclick="quickAddPointLog()">➕ 补录</button>
+        </div>
+        <p id="recSingleMsg" class="text-xs text-muted mt-sm"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="modal-overlay" id="pinModal">
+  <div class="modal" style="max-width:400px">
+    <h3>🔐 教师登录</h3>
+    <p class="text-sm text-muted mb-md">选择教师账号并输入密码登录。5分钟无操作自动锁定。</p>
+    <div class="teacher-list" id="teacherList"></div>
+    <div id="loginPwdArea" style="display:none">
+      <label class="text-sm">密码：</label>
+      <input type="password" id="pinInput" placeholder="输入密码" maxlength="20" style="width:100%;font-size:16px;text-align:center;letter-spacing:4px" onkeydown="if(event.key==='Enter')verifyTeacherLogin()">
+    </div>
+    <p id="loginMsg" class="text-xs text-muted mt-sm text-center" style="display:none"></p>
+    <div class="modal-actions">
+      <button class="btn" onclick="togglePinModal()">取消</button>
+      <button class="btn btn-primary" id="btnLogin" onclick="verifyTeacherLogin()" disabled>登录</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pointHistoryModal">
+  <div class="modal" style="max-width:640px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3 style="margin-bottom:0">📊 积分历史</h3>
+      <button class="btn btn-sm" onclick="document.getElementById('pointHistoryModal').classList.remove('show')" style="font-size:16px;padding:4px 8px;line-height:1">✕</button>
+    </div>
+    <div class="mb-md flex-row gap-sm">
+      <select id="phStudent" onchange="renderPointHistory()" style="flex:1">
+        <option value="">选择学生</option>
+      </select>
+      <select id="phTeacher" onchange="renderPointHistory()">
+        <option value="">全部教师</option>
+      </select>
+    </div>
+    <div id="pointHistoryContent" style="max-height:50vh;overflow-y:auto"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="rulesModal">
+  <div class="modal" style="max-width:640px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0">
+      <h3 style="margin-bottom:0">📋 A1-1班 · 积分规则</h3>
+      <button class="btn btn-sm" onclick="toggleRules()" style="font-size:16px;padding:4px 8px;line-height:1">✕</button>
+    </div>
+    <div class="rules-section">
+      <h4>🎯 五大积分维度</h4>
+      <table class="rules-table">
+        <tr><th>维度</th><th>英文</th><th>分值</th><th>示例</th></tr>
+        <tr><td>学术参与</td><td>Academic Engagement</td><td>+1~3</td><td>课堂主动发言、高质量作业、深度提问</td></tr>
+        <tr><td>协作能力</td><td>Collaboration</td><td>+1~3</td><td>小组贡献突出、帮助同学、有效合作</td></tr>
+        <tr><td>社区服务</td><td>Community Service</td><td>+2~5</td><td>班级值日超预期、校内志愿服务、组织活动<br><em>⏱ 每人每周限 2 次</em></td></tr>
+        <tr><td>领导力</td><td>Leadership</td><td>+3~5</td><td>带领小组完成任务、发起班级倡议、主持活动<br><em>⏱ 每人每周限 2 次</em></td></tr>
+        <tr><td>成长心态</td><td>Growth Mindset</td><td>+1~2</td><td>面对挑战的韧性、明显的进步轨迹、反思改进</td></tr>
+      </table>
+    </div>
+    <div class="rules-section">
+      <h4>📝 三种记录方式</h4>
+      <div class="rules-grid">
+        <div class="rules-card"><span class="rules-icon">👩‍🏫</span><strong>教师直接奖励</strong><p class="text-sm text-muted">老师选择学生→维度→分值，即时加分。最常用方式。</p></div>
+        <div class="rules-card"><span class="rules-icon">👥</span><strong>同伴提名</strong><p class="text-sm text-muted">首周每天限提 4 次，常规 2 次。同一人每天最多被提名 3 次，教师审核后生效。</p></div>
+        <div class="rules-card"><span class="rules-icon">✍️</span><strong>自我申报</strong><p class="text-sm text-muted">学生自己申报成长进步，老师审核确认后加分。</p></div>
+      </div>
+    </div>
+    <div class="rules-section">
+      <h4>💰 积分消费</h4>
+      <table class="rules-table">
+        <tr><th>项目</th><th>费用</th><th>说明</th></tr>
+        <tr><td>普通盲盒</td><td>50 分</td><td>70% 普通 / 25% 稀有 / 5% 史诗</td></tr>
+        <tr><td>稀有盲盒</td><td>150 分</td><td>50% 稀有 / 40% 史诗 / 10% 传说</td></tr>
+        <tr><td>传说盲盒</td><td>300 分</td><td>60% 史诗 / 40% 传说</td></tr>
+        <tr><td>饰品（普通→传说）</td><td>10 / 30 / 80 / 200 分</td><td>已购买可随时换装，不另收费</td></tr>
+        <tr><td>宠物槽位扩展</td><td>第3槽100分 / 第4槽200分</td><td>默认免费2个槽位</td></tr>
+        <tr><td>喂食 / 玩耍 / 清洁</td><td>3 分 / 次</td><td>提升对应属性 15~20%</td></tr>
+        <tr><td>治疗</td><td>5 分 / 次</td><td>恢复健康值 30%</td></tr>
+      </table>
+    </div>
+    <div class="rules-section">
+      <h4>⚙ 日常机制</h4>
+      <div class="rules-grid">
+        <div class="rules-card"><span class="rules-icon">⏰</span><strong>每日维护费</strong><p class="text-sm text-muted">每只宠物每天自动消耗 5 分，长期不喂会持续衰减。</p></div>
+        <div class="rules-card"><span class="rules-icon">🏠</span><strong>弃养与领养</strong><p class="text-sm text-muted">弃养宠物进入领养中心保留 48h，他人可半价领养。</p></div>
+        <div class="rules-card"><span class="rules-icon">🌟</span><strong>宠物进化</strong><p class="text-sm text-muted">四项属性总分越高，进化等级越高（Lv.1~8）。</p></div>
+      </div>
+      <div class="rules-grid" style="margin-top:8px">
+        <div class="rules-card"><span class="rules-icon">🚫</span><strong>提名上限</strong><p class="text-sm text-muted">每人每天最多被提名 3 次，防止集中刷分。</p></div>
+        <div class="rules-card"><span class="rules-icon">📅</span><strong>周频次上限</strong><p class="text-sm text-muted">社区服务、领导力每人每周各限 2 次（含所有记录方式）。</p></div>
+        <div class="rules-card"><span class="rules-icon">💰</span><strong>互动成本</strong><p class="text-sm text-muted">喂食/玩耍/清洁 3分/次，治疗 5分/次。</p></div>
+      </div>
+    </div>
+    <div class="rules-section">
+      <h4>🎉 首周探新（系统启动后 7 天内）</h4>
+      <div class="rules-grid">
+        <div class="rules-card"><span class="rules-icon">✨</span><strong>积分加倍</strong><p class="text-sm text-muted">教师奖励、同伴提名积分 ×1.5 倍。</p></div>
+        <div class="rules-card"><span class="rules-icon">📈</span><strong>提名升限</strong><p class="text-sm text-muted">每人每天可提名 4 次（常规 2 次）。</p></div>
+        <div class="rules-card"><span class="rules-icon">🎯</span><strong>新手任务</strong><p class="text-sm text-muted">3 个简单任务各 +5 分：提名同学 / 课堂发言 / 喂宠物。</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="petDetailModal">
+  <div class="modal" style="max-width:600px">
+    <div id="petDetailContent"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closePetDetail()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="blindboxResultModal">
+  <div class="modal" style="max-width:400px;text-align:center">
+    <div id="blindboxResult"></div>
+    <div class="modal-actions" style="justify-content:center">
+      <button class="btn btn-primary" onclick="closeBlindboxResult()">太棒了！</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="studentNominateModal">
+  <div class="modal" style="max-width:440px">
+    <h3>提名同学</h3>
+    <div class="mb-md">
+      <label class="text-sm">我是：</label>
+      <select id="nominatorName" style="width:100%"><option value="">选择自己的名字</option></select>
+    </div>
+    <div class="mb-md">
+      <label class="text-sm">提名谁：</label>
+      <select id="nominateTarget" style="width:100%"><option value="">选择同学</option></select>
+    </div>
+    <div class="mb-md">
+      <label class="text-sm">行为维度：</label>
+      <select id="nominateDimension" style="width:100%">
+        <option value="collaboration">协作能力（+1~3分）</option>
+        <option value="growth">成长心态（+1~2分）</option>
+      </select>
+    </div>
+    <div class="mb-md">
+      <label class="text-sm">提名理由（必填）：</label>
+      <input type="text" id="nominateReason" placeholder="例如：今天 lab 课帮我理解了 titration" style="width:100%">
+    </div>
+    <p class="text-xs text-muted mb-md">每人每天限提名 4 次（首周）/ 2 次（常规），同一人每天最多被提名 3 次。需教师审核后生效，不能提名自己。</p>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeNominateModal()">取消</button>
+      <button class="btn btn-primary" onclick="submitNomination()">提交提名</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="selfReportModal">
+  <div class="modal" style="max-width:440px">
+    <h3>自我申报</h3>
+    <div class="mb-md">
+      <label class="text-sm">我是：</label>
+      <select id="reportStudentName" style="width:100%"><option value="">选择自己的名字</option></select>
+    </div>
+    <div class="mb-md">
+      <label class="text-sm">申报维度：</label>
+      <select id="reportDimension" style="width:100%">
+        <option value="service">社区服务（+2~5分）</option>
+        <option value="leadership">领导力（+3~5分）</option>
+      </select>
+    </div>
+    <div class="mb-md">
+      <label class="text-sm">申报说明（必填）：</label>
+      <input type="text" id="reportReason" placeholder="例如：周六参与社区清洁活动3小时" style="width:100%">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeSelfReportModal()">取消</button>
+      <button class="btn btn-primary" onclick="submitSelfReport()">提交申报</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<script>
+const PET_NAMES_DOG = ['旺财','豆豆','阿福','来福','大黄','可乐','团子','棉花','贝贝','多多','小Q','肉松','墩墩','布丁','毛球'];
+const PET_NAMES_CAT = ['咪咪','雪球','奶糖','年糕','汤圆','芝麻','泡芙','布偶','豆沙','煤球','琥珀','曲奇','麻薯','果冻','芋圆'];
+const ACC_NAMES = {
+  head: [
+    {name:'小草帽', rarity:'common', icon:'👒', price:10},
+    {name:'星星发卡', rarity:'rare', icon:'⭐', price:30},
+    {name:'皇冠', rarity:'epic', icon:'👑', price:80},
+    {name:'天使光环', rarity:'legendary', icon:'😇', price:200},
+  ],
+  neck: [
+    {name:'幸运铃铛', rarity:'common', icon:'🔔', price:10},
+    {name:'蝴蝶结', rarity:'rare', icon:'🎀', price:30},
+    {name:'蓝宝石项链', rarity:'epic', icon:'💎', price:80},
+    {name:'黄金铃铛', rarity:'legendary', icon:'🔔', price:200},
+  ],
+  back: [
+    {name:'小书包', rarity:'common', icon:'🎒', price:10},
+    {name:'蓝围巾', rarity:'rare', icon:'🧣', price:30},
+    {name:'天使翅膀', rarity:'epic', icon:'🦋', price:80},
+    {name:'龙之翼', rarity:'legendary', icon:'🦅', price:200},
+  ]
+};
+const EVO_NAMES_DOG = ['小奶狗','萌幼犬','活泼犬','小少年','成长犬','勇敢犬','忠诚犬','守护犬'];
+const EVO_NAMES_CAT = ['小奶猫','好奇猫','活泼猫','优雅猫','机敏猫','温柔猫','睿智猫','守护猫'];
+const DIM_LABELS = {academic:'学术参与',collaboration:'协作能力',service:'社区服务',leadership:'领导力',growth:'成长心态'};
+const DIM_POINTS = {academic:[1,2,3],collaboration:[1,2,3],service:[2,3,4,5],leadership:[3,4,5],growth:[1,2]};
+const WEEKLY_CAPS = { service: 2, leadership: 2 };
+const DAILY_NOMINATED_CAP = 3;
+const BEGINNER_QUESTS = [
+  { id:'q1', name:'提名一位同学', icon:'👥', reward:5, desc:'在积分中心使用同伴提名' },
+  { id:'q2', name:'课堂发言', icon:'💬', reward:5, desc:'被教师以「学术参与」维度奖励' },
+  { id:'q3', name:'喂养你的宠物', icon:'🍖', reward:5, desc:'在宠物详情中喂食一次' },
+];
+const RARITY_COLORS = {common:{bg:'var(--gray-50)',color:'var(--gray-600)',label:'普通'},rare:{bg:'var(--blue-bg)',color:'var(--blue-dark)',label:'稀有'},epic:{bg:'var(--purple-bg)',color:'var(--purple-dark)',label:'史诗'},legendary:{bg:'var(--amber-bg)',color:'var(--amber-dark)',label:'传说'}};
+const BOX_TYPES = [
+  {name:'普通盲盒', icon:'📦', price:50, odds:{common:70, rare:25, epic:5, legendary:0}, color:'var(--gray-50)'},
+  {name:'稀有盲盒', icon:'🎁', price:150, odds:{common:0, rare:50, epic:40, legendary:10}, color:'var(--blue-bg)'},
+  {name:'传说盲盒', icon:'✨', price:300, odds:{common:0, rare:0, epic:60, legendary:40}, color:'var(--amber-bg)'},
+];
+
+function genId() { return 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
+
+function getDefaultData() {
+  const names = ['Davis','Zephyr','Lucas','James','Alan','Amy','Kiki','Rella','Eason','Gwendolen','Elena','Jason','Cynan'];
+  const students = names.map((name, i) => ({
+    id: 's' + i,
+    name,
+    points: 0,
+    slots: 2,
+    maxSlots: 2,
+    extraSlots: 0,
+    todayNominations: 0,
+    nominationDate: '',
+    nominatedToday: 0,
+    nominatedDate: '',
+    weeklyServiceCount: 0,
+    weeklyLeadershipCount: 0,
+    weekStart: '',
+    pets: [],
+    quests: BEGINNER_QUESTS.map(q => ({ id: q.id, done: false })),
+    ownedAccessories: [],
+    pointLogs: [],
+  }));
+  return {
+    version: 7,
+    startDate: new Date().toISOString().slice(0,10),
+    teachers: [
+      { id:'t0', username:'jeanie', displayName:'Jeanie', password:'2026', isAdmin:true },
+    ],
+    activeTeacher: null,
+    students,
+    adoptionCenter: [],
+    pendingNominations: [],
+    pendingSelfReports: [],
+    lastMaintenanceDate: '',
+    autoLockMinutes: 5,
+    autoLockTimer: null,
+    unlockedSince: 0,
+  };
+}
+
+let DATA = getDefaultData();
+
+/* ===== 云端同步配置 ===== */
+// Blob ID 存 localStorage，不再硬编码（jsonblob 每 24h 过期，需自动续命）
+const CLOUD_DEFAULT_BLOB = '019ef22a-0bef-7800-bb24-88168c4e66ba';
+const CLOUD_API_BASE = 'https://api.jsonblob.com/';
+let CLOUD_BLOB_ID = localStorage.getItem('cloud_blob_id') || CLOUD_DEFAULT_BLOB;
+let CLOUD_URL = CLOUD_API_BASE + CLOUD_BLOB_ID;
+
+function setCloudBlobId(id) {
+  CLOUD_BLOB_ID = id;
+  CLOUD_URL = CLOUD_API_BASE + id;
+  localStorage.setItem('cloud_blob_id', id);
+  console.log('☁️ 云端 Blob 已更新:', id);
+}
+
+async function createCloudBlob(initialData) {
+  try {
+    const resp = await fetch(CLOUD_API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(initialData || {version:7,_lastModified:0})
+    });
+    if (!resp.ok) throw new Error('创建 Blob 失败: ' + resp.status);
+    const blob = await resp.json();
+    const newId = resp.headers.get('Location')?.split('/').pop()
+      || blob.id
+      || resp.headers.get('X-jsonblob-id');
+    if (newId) {
+      setCloudBlobId(newId);
+      return newId;
+    }
+    throw new Error('无法获取新 Blob ID');
+  } catch(e) {
+    console.error('☁️ 创建云端 Blob 失败:', e.message);
+    return null;
+  }
+}
+let SYNC_STATUS = 'local'; // local | syncing | synced | error
+let syncTimer = null;
+let lastCloudFetch = 0;
+let lastLocalChangeTime = 0; // Track when user last made changes
+
+function updateSyncUI() {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  const icons = { local: '💻', syncing: '☁️', synced: '✅', error: '⚠️' };
+  const labels = { local: '本地', syncing: '同步中', synced: '已同步', error: '同步失败' };
+  el.innerHTML = icons[SYNC_STATUS] + ' ' + labels[SYNC_STATUS];
+  el.className = 'sync-badge sync-' + SYNC_STATUS;
+}
+
+function debouncedCloudPush() {
+  console.log('🔄 [sync] debouncedCloudPush called, will fire cloudPush in 800ms');
+  if (syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    console.log('🔄 [sync] 800ms timer fired, calling cloudPush()');
+    cloudPush();
+  }, 800);
+}
+
+async function cloudPush(silent) {
+  console.log('☁️ [sync] cloudPush() started, CLOUD_URL=' + CLOUD_URL);
+  SYNC_STATUS = 'syncing';
+  updateSyncUI();
+  try {
+    DATA._lastModified = Date.now();
+    // Save to localStorage too so timestamp stays in sync
+    localStorage.setItem('class_pet_system', JSON.stringify(DATA));
+    const resp = await fetch(CLOUD_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(DATA)
+    });
+    if (resp.status === 404) {
+      // Blob 过期/被删，自动创建新 Blob 并重试
+      console.warn('☁️ 云端 Blob 已过期，自动重建...');
+      const newId = await createCloudBlob(DATA);
+      if (newId) {
+        const retry = await fetch(CLOUD_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(DATA)
+        });
+        if (retry.ok) {
+          SYNC_STATUS = 'synced';
+        } else {
+          SYNC_STATUS = 'error';
+        }
+      } else {
+        SYNC_STATUS = 'error';
+      }
+    } else if (resp.ok) {
+      // Verify: read back to confirm the PUT was actually persisted
+      const verify = await resp.json();
+      if (verify && verify._lastModified === DATA._lastModified) {
+        SYNC_STATUS = 'synced';
+      } else {
+        console.warn('☁️ PUT returned OK but data was not persisted');
+        SYNC_STATUS = 'error';
+      }
+    } else {
+      console.warn('☁️ PUT failed with status:', resp.status);
+      SYNC_STATUS = 'error';
+    }
+  } catch(e) {
+    console.warn('☁️ 云端保存失败，数据已存本地:', e.message);
+    SYNC_STATUS = 'error';
+  }
+  console.log('☁️ [sync] cloudPush() finished, final SYNC_STATUS=' + SYNC_STATUS);
+  updateSyncUI();
+}
+
+async function cloudPull() {
+  // Prevent pulling too frequently (min 10s between pulls)
+  if (Date.now() - lastCloudFetch < 10000) return;
+  lastCloudFetch = Date.now();
+  try {
+    const resp = await fetch(CLOUD_URL);
+    if (resp.status === 404) {
+      // Blob expired, create new one and push local data as seed
+      console.warn('☁️ 云端 Blob 已过期，重建并上传本地数据...');
+      const newId = await createCloudBlob(DATA);
+      if (newId) {
+        // Push current local data to the new blob
+        const pushResp = await fetch(CLOUD_URL, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({...DATA, _lastModified: Date.now()})
+        });
+        if (pushResp.ok) {
+          SYNC_STATUS = 'synced';
+          updateSyncUI();
+          showToast('✅ 云端已重建并同步', 'success');
+        }
+      }
+      return false;
+    }
+    if (!resp.ok) return;
+    const cloud = await resp.json();
+    if (!cloud || cloud.version !== DATA.version) return;
+    const cloudTime = cloud._lastModified || 0;
+    const localTime = DATA._lastModified || 0;
+    // 本地无 _lastModified 表示是全新默认数据，始终从云端拉取
+    const isFreshLocal = !DATA._lastModified;
+    // Only pull if cloud is DEFINITIVELY newer AND user hasn't made local changes
+    // that haven't been synced yet (within last 10s)
+    if (isFreshLocal || cloudTime > localTime + 2000) {
+      // Don't overwrite if user has pending unsynced changes
+      if (lastLocalChangeTime > 0 && (Date.now() - lastLocalChangeTime < 10000)) {
+        console.log('☁️ 有本地未同步修改，跳过云端拉取');
+        return false;
+      }
+      // Cloud has newer data
+      console.log('☁️ 检测到云端新数据，正在同步...');
+      DATA = {...getDefaultData(), ...cloud};
+      DATA.students = DATA.students.map(s => ({
+        ...getDefaultData().students[0],
+        ...s,
+        pointLogs: s.pointLogs || [],
+        pets: (s.pets || []).map(p => ({
+          id: p.id || genId(), type: p.type || 'dog', name: p.name || '未命名',
+          rarity: p.rarity || 'common', evolution: p.evolution || 1,
+          hunger: p.hunger ?? 80, happiness: p.happiness ?? 80,
+          cleanliness: p.cleanliness ?? 80, health: p.health ?? 90,
+          accessories: p.accessories || {head:null,neck:null,back:null},
+        }))
+      }));
+      if (!DATA.teachers || DATA.teachers.length === 0) {
+        DATA.teachers = getDefaultData().teachers;
+      }
+      localStorage.setItem('class_pet_system', JSON.stringify(DATA));
+      SYNC_STATUS = 'synced';
+      updateSyncUI();
+      renderAll();
+      showToast('✅ 已从云端同步最新数据', 'success');
+      return true;
+    }
+  } catch(e) {
+    console.warn('☁️ 云端读取失败:', e.message);
+  }
+  return false;
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem('class_pet_system');
+    if (raw) {
+      let parsed = JSON.parse(raw);
+      if (parsed.version !== getDefaultData().version) {
+        console.log('数据版本不匹配，重置为默认数据');
+        localStorage.removeItem('class_pet_system');
+        DATA = getDefaultData();
+        saveData();
+      } else {
+        DATA = {...getDefaultData(), ...parsed};
+        // Ensure teachers array exists (migration from v6 pin)
+        if (!DATA.teachers || DATA.teachers.length === 0) {
+          DATA.teachers = getDefaultData().teachers;
+        }
+        // Restore active teacher session if within time window
+        if (DATA.activeTeacher && DATA.unlockedSince) {
+          ACTIVE_TEACHER = DATA.activeTeacher;
+          UNLOCKED = true;
+        }
+        DATA.students = DATA.students.map(s => ({
+          ...getDefaultData().students[0],
+          ...s,
+          pointLogs: s.pointLogs || [],
+          pets: (s.pets || []).map(p => ({
+            id: p.id || genId(), type: p.type || 'dog', name: p.name || '未命名',
+            rarity: p.rarity || 'common', evolution: p.evolution || 1,
+            hunger: p.hunger ?? 80, happiness: p.happiness ?? 80,
+            cleanliness: p.cleanliness ?? 80, health: p.health ?? 90,
+            accessories: p.accessories || {head:null,neck:null,back:null},
+          }))
+        }));
+      }
+    }
+  } catch(e) { console.error('load error', e); }
+  // runMaintenance() 已移至 init()，在 cloudPull 之后执行
+  // 避免新设备默认 0 分数据通过 maintenance 的 saveData 覆盖云端真实数据
+}
+function saveData() {
+  console.log('💾 [sync] saveData() called');
+  lastLocalChangeTime = Date.now();
+  localStorage.setItem('class_pet_system', JSON.stringify(DATA));
+  debouncedCloudPush();
+}
+
+function getStudent(id) { return DATA.students.find(s => s.id === id); }
+
+function getWeekKey() {
+  // ISO week: Monday = start of week
+  const d = new Date();
+  const day = d.getDay(); // 0=Sun
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
+  const monday = new Date(d.setDate(diff));
+  return monday.toISOString().slice(0, 10);
+}
+function checkWeeklyCap(s, dim) {
+  if (!WEEKLY_CAPS[dim]) return true; // no cap for this dimension
+  const wk = getWeekKey();
+  if (s.weekStart !== wk) { s.weeklyServiceCount = 0; s.weeklyLeadershipCount = 0; s.weekStart = wk; }
+  const field = dim === 'service' ? 'weeklyServiceCount' : 'weeklyLeadershipCount';
+  if (s[field] >= WEEKLY_CAPS[dim]) return false;
+  s[field]++;
+  return true;
+}
+function checkDailyNominatedCap(s) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (s.nominatedDate !== today) { s.nominatedToday = 0; s.nominatedDate = today; }
+  if (s.nominatedToday >= DAILY_NOMINATED_CAP) return false;
+  s.nominatedToday++;
+  return true;
+}
+
+function isFirstWeek() {
+  const start = new Date(DATA.startDate);
+  const now = new Date();
+  const diff = (now - start) / (1000 * 60 * 60 * 24);
+  return diff >= 0 && diff < 7;
+}
+function getFirstWeekMultiplier() { return isFirstWeek() ? 1.5 : 1; }
+function completeQuest(s, questId) {
+  const q = s.quests.find(q => q.id === questId);
+  if (!q || q.done) return false;
+  q.done = true;
+  const def = BEGINNER_QUESTS.find(d => d.id === questId);
+  s.points += def.reward;
+  saveData();
+  showToast(`🎉 新手任务完成：${def.name}！+${def.reward}分`, 'success');
+  renderAll();
+  return true;
+}
+
+let UNLOCKED = false;
+let ACTIVE_TEACHER = null; // {id, username, displayName}
+function isUnlocked() {
+  if (!UNLOCKED || !ACTIVE_TEACHER) return false;
+  if (DATA.autoLockTimer && Date.now() - DATA.unlockedSince > DATA.autoLockMinutes * 60000) {
+    lockSystem(); return false;
+  }
+  return true;
+}
+function getActiveTeacherName() {
+  return ACTIVE_TEACHER ? ACTIVE_TEACHER.displayName : '';
+}
+function lockSystem() {
+  UNLOCKED = false;
+  ACTIVE_TEACHER = null;
+  DATA.activeTeacher = null;
+  DATA.autoLockTimer = null;
+  DATA.unlockedSince = 0;
+  updatePinUI();
+  saveData();
+  showToast('已自动锁定，恢复浏览模式', 'info');
+  renderAll();
+}
+function updatePinUI() {
+  const badge = document.getElementById('pinBadge');
+  const label = document.getElementById('pinLabel');
+  if (isUnlocked()) {
+    badge.className = 'pin-badge unlocked';
+    label.textContent = ACTIVE_TEACHER.displayName + ' · 点击锁定';
+  } else {
+    badge.className = 'pin-badge locked';
+    label.textContent = '未登录';
+  }
+}
+
+function togglePinModal() {
+  const m = document.getElementById('pinModal');
+  if (m.classList.contains('show')) { m.classList.remove('show'); return; }
+  if (isUnlocked()) { lockSystem(); return; }
+  // Reset login state
+  document.getElementById('pinInput').value = '';
+  document.getElementById('loginPwdArea').style.display = 'none';
+  document.getElementById('loginMsg').style.display = 'none';
+  document.getElementById('btnLogin').disabled = true;
+  // Select none
+  window._selectedTeacherId = null;
+  renderTeacherList();
+  m.classList.add('show');
+}
+
+function renderTeacherList() {
+  const div = document.getElementById('teacherList');
+  div.innerHTML = DATA.teachers.map(t => `
+    <div class="teacher-item ${window._selectedTeacherId===t.id?'style=\"background:var(--coral-bg)\"':''}" 
+         onclick="selectTeacher('${t.id}')" id="titem-${t.id}">
+      <div class="t-avatar">${t.displayName[0]}</div>
+      <div>
+        <div class="t-name">${t.displayName}</div>
+        <div class="t-role">${t.isAdmin?'管理员':'教师'}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function selectTeacher(tid) {
+  window._selectedTeacherId = tid;
+  document.querySelectorAll('.teacher-item').forEach(el => el.style.background = '');
+  const el = document.getElementById('titem-' + tid);
+  if (el) el.style.background = 'var(--coral-bg)';
+  document.getElementById('loginPwdArea').style.display = 'block';
+  document.getElementById('loginMsg').style.display = 'none';
+  document.getElementById('btnLogin').disabled = false;
+  document.getElementById('pinInput').value = '';
+  setTimeout(() => document.getElementById('pinInput').focus(), 100);
+}
+
+function verifyTeacherLogin() {
+  if (!window._selectedTeacherId) { showToast('请先选择账号', 'error'); return; }
+  const pwd = document.getElementById('pinInput').value;
+  const teacher = DATA.teachers.find(t => t.id === window._selectedTeacherId);
+  if (!teacher) { showToast('账号不存在', 'error'); return; }
+  if (teacher.password === pwd) {
+    UNLOCKED = true;
+    ACTIVE_TEACHER = { id: teacher.id, username: teacher.username, displayName: teacher.displayName };
+    DATA.activeTeacher = ACTIVE_TEACHER;
+    DATA.unlockedSince = Date.now();
+    DATA.autoLockTimer = true;
+    document.getElementById('pinModal').classList.remove('show');
+    updatePinUI();
+    saveData();
+    showToast('欢迎，' + teacher.displayName + '！（' + DATA.autoLockMinutes + '分钟后自动锁定）', 'success');
+    renderAll();
+  } else {
+    showToast('密码错误', 'error');
+    document.getElementById('pinInput').value = '';
+    document.getElementById('loginMsg').style.display = 'block';
+    document.getElementById('loginMsg').textContent = '密码不正确，请重试';
+  }
+}
+
+function tryUnlock() {
+  if (!isUnlocked()) {
+    document.getElementById('pinInput').value = '';
+    document.getElementById('loginPwdArea').style.display = 'none';
+    document.getElementById('loginMsg').style.display = 'none';
+    document.getElementById('btnLogin').disabled = true;
+    window._selectedTeacherId = null;
+    renderTeacherList();
+    document.getElementById('pinModal').classList.add('show');
+    return false;
+  }
+  return true;
+}
+
+function toggleRules() {
+  const m = document.getElementById('rulesModal');
+  m.classList.toggle('show');
+}
+
+function runMaintenance() {
+  const today = new Date().toISOString().slice(0,10);
+  if (DATA.lastMaintenanceDate === today) return;
+  DATA.students.forEach(s => {
+    s.pets.forEach(p => {
+      if (s.points >= 5) {
+        s.points -= 5;
+      } else {
+        p.hunger = Math.max(0, p.hunger - 10);
+        p.happiness = Math.max(0, p.happiness - 10);
+        p.cleanliness = Math.max(0, p.cleanliness - 10);
+        p.health = Math.max(0, p.health - 5);
+      }
+      p.hunger = Math.max(0, p.hunger - 3);
+      p.happiness = Math.max(0, p.happiness - 2);
+      p.cleanliness = Math.max(0, p.cleanliness - 2);
+      if (p.hunger < 20 || p.happiness < 20 || p.cleanliness < 20) {
+        p.health = Math.max(0, p.health - 5);
+      }
+    });
+  });
+  DATA.adoptionCenter = DATA.adoptionCenter.filter(a => {
+    if (Date.now() > a.expiresAt) return false;
+    return true;
+  });
+  DATA.students.forEach(s => {
+    if (s.nominationDate !== today) {
+      s.todayNominations = 0;
+      s.nominationDate = today;
+    }
+  });
+  DATA.lastMaintenanceDate = today;
+  saveData();
+}
+
+function randomPick(odds) {
+  const r = Math.random() * 100;
+  let cum = 0;
+  for (const [k, v] of Object.entries(odds)) {
+    cum += v;
+    if (r <= cum) return k;
+  }
+  return 'common';
+}
+function randomName(type) {
+  const pool = type === 'dog' ? PET_NAMES_DOG : PET_NAMES_CAT;
+  const used = DATA.students.flatMap(s => s.pets.map(p => p.name));
+  const avail = pool.filter(n => !used.includes(n));
+  return avail.length ? avail[Math.floor(Math.random() * avail.length)] : pool[Math.floor(Math.random() * pool.length)];
+}
+
+function drawPet(openBox, studentId) {
+  const s = getStudent(studentId);
+  if (!s) return;
+  const type = Math.random() < 0.5 ? 'dog' : 'cat';
+  const rarity = randomPick(openBox.odds);
+  const name = randomName(type);
+  const pet = {
+    id: genId(), type, name, rarity,
+    evolution: 1,
+    hunger: 80 + Math.floor(Math.random() * 20),
+    happiness: 80 + Math.floor(Math.random() * 20),
+    cleanliness: 80 + Math.floor(Math.random() * 20),
+    health: 90 + Math.floor(Math.random() * 10),
+    accessories: {head:null, neck:null, back:null},
+  };
+  s.pets.push(pet);
+  saveData();
+  return pet;
+}
+
+const PET_IMG_MAP = {
+  dog: {
+    common:   'pet-images/resized/A_cute_kawaii_chibi_baby_puppy_2026-06-16T00-26-19_200.png',
+    rare:     'pet-images/resized/A_cute_kawaii_chibi_young_pupp_2026-06-16T00-26-50_200.png',
+    epic:     'pet-images/resized/A_cute_kawaii_chibi_ice_puppy__2026-06-16T00-26-50_200.png',
+    legendary:'pet-images/resized/A_cute_kawaii_chibi_guardian_d_2026-06-16T00-27-19_200.png',
+  },
+  cat: {
+    common:   'pet-images/resized/A_cute_kawaii_chibi_baby_kitte_2026-06-16T00-26-49_200.png',
+    rare:     'pet-images/resized/A_cute_kawaii_chibi_jade_kitte_2026-06-16T00-26-50_200.png',
+    epic:     'pet-images/resized/A_cute_kawaii_chibi_rose_kitte_2026-06-16T00-27-19_200.png',
+    legendary:'pet-images/resized/A_cute_kawaii_chibi_golden_cro_2026-06-16T00-27-19_200.png',
+  }
+};
+function petSVG(pet, size) {
+  const s = size || 40;
+  const src = PET_IMG_MAP[pet.type]?.[pet.rarity] || PET_IMG_MAP.dog.common;
+  const borderRadius = (pet.rarity === 'common') ? '16px' : (pet.rarity === 'rare' ? '12px' : (pet.rarity === 'epic' ? '10px' : '8px'));
+  return `<img src="${src}" width="${s}" height="${s}" style="object-fit:contain;border-radius:${borderRadius};display:block" alt="${pet.name}" onerror="this.style.display='none'">`;
+}
+
+function toastEl(msg, type) {
+  const id = 'toast_' + Date.now();
+  const div = document.createElement('div');
+  div.className = 'toast ' + type;
+  div.id = id;
+  div.textContent = msg;
+  document.getElementById('toastContainer').appendChild(div);
+  setTimeout(() => { const el = document.getElementById(id); if (el) el.remove(); }, 2200);
+}
+function showToast(msg, type) { toastEl(msg, type); }
+
+function renderAll() {
+  renderPanorama();
+  renderPointsPanel();
+  renderBlindboxShop();
+  renderAccessoryShop();
+  renderAdoptionCenter();
+  renderSettings();
+  updatePinUI();
+}
+function renderPanorama() {
+  const container = document.getElementById('panoramaContent');
+  const unlocked = isUnlocked();
+  let html = '';
+  // 首周新手任务卡片
+  if (isFirstWeek()) {
+    html += `<div style="background:linear-gradient(135deg,#fff7ed,#fef3c7);border:1px solid var(--amber);border-radius:12px;padding:14px 18px;margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <span style="font-weight:600;font-size:15px;color:var(--amber-dark)">🎉 首周探新 · 新手任务</span>
+        <span style="font-size:12px;color:var(--amber-dark);background:#fff;padding:2px 10px;border-radius:20px">奖励 ×1.5 | 日提名限额 4次</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">`;
+    BEGINNER_QUESTS.forEach(q => {
+      // Check ALL students to see how many have completed this quest
+      const doneCount = DATA.students.filter(s => s.quests.find(qq => qq.id === q.id)?.done).length;
+      html += `<div style="flex:1;min-width:140px;background:#fff;border-radius:8px;padding:10px 12px;text-align:center">
+        <span style="font-size:24px">${q.icon}</span>
+        <div style="font-weight:500;font-size:13px;margin:4px 0">${q.name}</div>
+        <div style="color:var(--amber-dark);font-weight:600;font-size:14px">+${q.reward}分</div>
+        <div style="font-size:11px;color:var(--gray-500)">${doneCount}/${DATA.students.length} 已完成</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+  DATA.students.forEach(s => {
+    const maxSlots = 2 + s.extraSlots;
+    html += `<div class="student-section"><div class="student-header">
+      <span>${s.name}</span>
+      <span class="student-points">积分：${s.points}</span>
+      <span class="text-xs text-muted">槽位：${s.pets.length}/${maxSlots}</span>
+    </div>`;
+    if (s.pets.length === 0) {
+      html += `<p class="text-sm text-muted" style="padding-left:20px">还没有宠物，去盲盒商店抽一个吧！</p>`;
+    } else {
+      html += `<div class="grid-4">`;
+      s.pets.forEach(p => {
+        const evoNames = p.type === 'dog' ? EVO_NAMES_DOG : EVO_NAMES_CAT;
+        html += `<div class="pet-card" onclick="openPetDetail('${s.id}','${p.id}')">
+          <div class="pet-top">
+            <div class="pet-avatar">${petSVG(p,52)}</div>
+            <div class="pet-info">
+              <div class="pet-name">${p.name}</div>
+              <div class="pet-owner">${s.name} · ${p.type==='dog'?'🐕':'🐱'}</div>
+            </div>
+          </div>
+          <div class="pet-stats">
+            <div class="stat-row"><span>饱腹</span><div class="bar"><div class="bar-fill" style="width:${p.hunger}%;background:var(--amber)"></div></div><span>${p.hunger}</span></div>
+            <div class="stat-row"><span>快乐</span><div class="bar"><div class="bar-fill" style="width:${p.happiness}%;background:var(--amber)"></div></div><span>${p.happiness}</span></div>
+            <div class="stat-row"><span>清洁</span><div class="bar"><div class="bar-fill" style="width:${p.cleanliness}%;background:var(--blue)"></div></div><span>${p.cleanliness}</span></div>
+          </div>
+          <div class="pet-meta">
+            <span class="rarity-tag rarity-${p.rarity}">${RARITY_COLORS[p.rarity].label}</span>
+            <span>Lv.${p.evolution} ${evoNames[p.evolution-1]}</span>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+      if (s.pets.length < maxSlots && unlocked) {
+        html += `<button class="btn btn-sm mt-sm" onclick="buySlot('${s.id}')" style="margin-left:8px">+ 解锁槽位（${s.extraSlots===0?'100':s.extraSlots===1?'200':'-'}分）</button>`;
+      }
+    }
+    html += `</div>`;
+  });
+  if (!unlocked) {
+    html += `<div class="flex-row gap-sm mt-md" style="justify-content:center">
+      <button class="btn btn-sm" onclick="openNominateModal()">提名同学</button>
+      <button class="btn btn-sm" onclick="openSelfReportModal()">自我申报</button>
+    </div>`;
+  }
+  container.innerHTML = html;
+}
+function renderPointsPanel() {
+  const sSelect = document.getElementById('awardStudent');
+  sSelect.innerHTML = '<option value="">选择学生</option>' + DATA.students.map(s => `<option value="${s.id}">${s.name}（${s.points}分）</option>`).join('');
+  const unlocked = isUnlocked();
+  document.getElementById('btnDirectAward').disabled = !unlocked;
+  document.getElementById('awardStudent').disabled = !unlocked;
+  document.getElementById('awardDimension').disabled = !unlocked;
+  document.getElementById('awardPoints').disabled = !unlocked;
+  renderPendingNominations();
+  renderPendingSelfReports();
+  renderLeaderboard();
+}
+function renderPendingNominations() {
+  const div = document.getElementById('pendingNominations');
+  const unlocked = isUnlocked();
+  if (DATA.pendingNominations.length === 0) {
+    div.innerHTML = '<p class="text-sm text-muted">暂无待审核提名</p>'; return;
+  }
+  let html = '<table><tr><th>提名者</th><th>被提名</th><th>维度</th><th>理由</th><th>操作</th></tr>';
+  DATA.pendingNominations.forEach((n, i) => {
+    html += `<tr><td>${n.from}</td><td>${n.to}</td><td>${DIM_LABELS[n.dimension]}</td><td>${n.reason}</td><td>`;
+    if (unlocked) {
+      html += `<button class="btn btn-sm btn-green" onclick="approveNomination(${i})">通过</button>
+               <button class="btn btn-sm btn-red" onclick="rejectNomination(${i})">拒绝</button>`;
+    } else {
+      html += '<span class="text-xs text-muted">需解锁</span>';
+    }
+    html += '</td></tr>';
+  });
+  html += '</table>';
+  div.innerHTML = html;
+}
+function renderPendingSelfReports() {
+  const div = document.getElementById('pendingSelfReports');
+  const unlocked = isUnlocked();
+  if (DATA.pendingSelfReports.length === 0) {
+    div.innerHTML = '<p class="text-sm text-muted">暂无待审核申报</p>'; return;
+  }
+  let html = '<table><tr><th>学生</th><th>维度</th><th>说明</th><th>建议分值</th><th>操作</th></tr>';
+  DATA.pendingSelfReports.forEach((r, i) => {
+    html += `<tr><td>${r.studentName}</td><td>${DIM_LABELS[r.dimension]}</td><td>${r.reason}</td><td>
+      <select id="srPoints${i}">${DIM_POINTS[r.dimension].map(p => `<option value="${p}">+${p}</option>`).join('')}</select></td><td>`;
+    if (unlocked) {
+      html += `<button class="btn btn-sm btn-green" onclick="approveSelfReport(${i})">通过</button>
+               <button class="btn btn-sm btn-red" onclick="rejectSelfReport(${i})">拒绝</button>`;
+    } else {
+      html += '<span class="text-xs text-muted">需解锁</span>';
+    }
+    html += '</td></tr>';
+  });
+  html += '</table>';
+  div.innerHTML = html;
+}
+function renderLeaderboard() {
+  const sorted = [...DATA.students].sort((a,b) => b.points - a.points);
+  let html = '<table><tr><th>排名</th><th>姓名</th><th>积分</th><th>宠物数</th></tr>';
+  sorted.forEach((s, i) => {
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1);
+    html += `<tr><td>${medal}</td><td>${s.name}</td><td style="font-weight:500">${s.points}</td><td>${s.pets.length}</td></tr>`;
+  });
+  html += '</table>';
+  document.getElementById('leaderboard').innerHTML = html;
+}
+function renderBlindboxShop() {
+  const sSelect = document.getElementById('boxStudent');
+  sSelect.innerHTML = '<option value="">选择学生</option>' + DATA.students.map(s => `<option value="${s.id}">${s.name}（${s.points}分 · ${s.pets.length}只宠物）</option>`).join('');
+  const unlocked = isUnlocked();
+  let html = '';
+  BOX_TYPES.forEach((box, i) => {
+    html += `<div class="blindbox-card" onclick="openBlindbox(${i})" style="background:${box.color}">
+      <div class="box-icon">${box.icon}</div>
+      <div class="box-name">${box.name}</div>
+      <div class="box-price">${box.price} 积分</div>
+      <div class="box-odds">${Object.entries(box.odds).filter(([_,v])=>v>0).map(([k,v])=>`${RARITY_COLORS[k].label}${v}%`).join(' · ')}</div>
+    </div>`;
+  });
+  document.getElementById('blindboxGrid').innerHTML = html;
+}
+function renderAccessoryShop() {
+  const sSelect = document.getElementById('accStudent');
+  sSelect.innerHTML = '<option value="">选择学生</option>' + DATA.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  if (!isUnlocked()) {
+    document.getElementById('accessoryShop').innerHTML = '<p class="text-sm text-muted">请先解锁操作模式</p>';
+    return;
+  }
+  sSelect.onchange = function() {
+    const sid = this.value;
+    const pSelect = document.getElementById('accPet');
+    if (!sid) { pSelect.innerHTML = '<option value="">先选学生</option>'; document.getElementById('accessoryShop').innerHTML = ''; return; }
+    const s = getStudent(sid);
+    pSelect.innerHTML = '<option value="">选择宠物</option>' + s.pets.map(p => `<option value="${p.id}">${p.name}（${RARITY_COLORS[p.rarity].label}）</option>`).join('');
+  };
+  document.getElementById('accPet').onchange = function() {
+    renderAccessoryItems();
+  };
+  renderAccessoryItems();
+}
+function renderAccessoryItems() {
+  const sid = document.getElementById('accStudent').value;
+  const pid = document.getElementById('accPet').value;
+  if (!sid || !pid) { document.getElementById('accessoryShop').innerHTML = '<p class="text-sm text-muted">请选择学生和宠物</p>'; return; }
+  const s = getStudent(sid);
+  const p = s.pets.find(p => p.id === pid);
+  if (!s || !p) { document.getElementById('accessoryShop').innerHTML = ''; return; }
+  if (!s.ownedAccessories) s.ownedAccessories = [];
+  let html = '<div>已装备：';
+  ['head','neck','back'].forEach(slot => {
+    const acc = p.accessories[slot];
+    html += `<span class="accessory-slot ${acc?'equipped':''}" style="display:inline-flex;margin:0 4px">${acc ? acc.icon : '-'}</span>`;
+  });
+  html += '</div><div class="grid-3 mt-md">';
+  for (const [slot, items] of Object.entries(ACC_NAMES)) {
+    html += `<div style="grid-column:1/-1;font-size:13px;font-weight:500;margin-top:8px">${slot==='head'?'头部':slot==='neck'?'颈部':'背部'}</div>`;
+    items.forEach(item => {
+      const owned = s.ownedAccessories.find(a => a.name === item.name && a.slot === slot);
+      const equipped = p.accessories[slot] && p.accessories[slot].name === item.name;
+      html += `<div class="shop-item">
+        <div class="item-icon">${item.icon}</div>
+        <div class="item-name">${item.name}</div>
+        <div class="item-slot"><span class="rarity-tag rarity-${item.rarity}">${RARITY_COLORS[item.rarity].label}</span></div>
+        <div class="item-price mt-sm">${item.price} 分</div>
+        <button class="btn btn-sm mt-sm ${equipped?'btn-green':owned?'':'btn-primary'}" 
+          onclick="${equipped?'unequipAcc':owned?'equipAcc':'buyAcc'}('${sid}','${pid}','${slot}','${item.name}',${item.price},'${item.rarity}','${item.icon}')"
+          ${!equipped && s.points < item.price && !owned ? 'disabled' : ''}>
+          ${equipped?'已装备':owned?'装备':'购买'}
+        </button>
+      </div>`;
+    });
+  }
+  html += '</div>';
+  document.getElementById('accessoryShop').innerHTML = html;
+}
+function renderAdoptionCenter() {
+  const div = document.getElementById('adoptionCenter');
+  const count = document.getElementById('adoptCount');
+  if (DATA.adoptionCenter.length === 0) {
+    div.innerHTML = '<div class="empty-state"><div class="empty-icon">🏠</div><p>领养中心暂无宠物</p><p class="text-xs text-muted mt-sm">有宠物被弃养后会出现在这里</p></div>';
+    count.style.display = 'none';
+  } else {
+    count.style.display = 'inline-block';
+    count.textContent = DATA.adoptionCenter.length;
+    let html = '<div class="grid-3">';
+    DATA.adoptionCenter.forEach((a, i) => {
+      const remaining = Math.max(0, Math.ceil((a.expiresAt - Date.now()) / 3600000));
+      const price = Math.floor((BOX_TYPES.find(b => b.name.includes(RARITY_COLORS[a.pet.rarity].label)) || BOX_TYPES[0]).price * 0.5);
+      html += `<div class="pet-card">
+        <div class="pet-top">
+          <div class="pet-avatar">${petSVG(a.pet,40)}</div>
+          <div class="pet-info">
+            <div class="pet-name">${a.pet.name}</div>
+            <div class="pet-owner">弃养者：${a.fromName} · ${a.pet.type==='dog'?'🐕':'🐱'}</div>
+          </div>
+        </div>
+        <div class="pet-stats">
+          <div class="stat-row"><span>饱腹</span><div class="bar"><div class="bar-fill" style="width:${a.pet.hunger}%;background:var(--amber)"></div></div></div>
+          <div class="stat-row"><span>快乐</span><div class="bar"><div class="bar-fill" style="width:${a.pet.happiness}%;background:var(--amber)"></div></div></div>
+        </div>
+        <div class="pet-meta">
+          <span class="rarity-tag rarity-${a.pet.rarity}">${RARITY_COLORS[a.pet.rarity].label}</span>
+          <span>剩余 ${remaining}h · ${price} 分领养</span>
+        </div>
+        ${isUnlocked() ? `<button class="btn btn-sm btn-primary mt-sm" style="width:100%" onclick="adoptPet(${i})">领养（${price}分）</button>` : ''}
+      </div>`;
+    });
+    html += '</div>';
+    div.innerHTML = html;
+  }
+}
+function renderSettings() {
+  updatePinUI();
+}
+
+function openPetDetail(sid, pid) {
+  const s = getStudent(sid);
+  const p = s.pets.find(p => p.id === pid);
+  if (!p) return;
+  const unlocked = isUnlocked();
+  const evoNames = p.type === 'dog' ? EVO_NAMES_DOG : EVO_NAMES_CAT;
+  let html = `<h3 style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+    <span id="petNameDisplay_${pid}" style="cursor:pointer" onclick="startRename('${sid}','${pid}')" title="点击改名">${p.name}</span>
+    <input id="petNameInput_${pid}" type="text" value="${p.name}" maxlength="8" style="display:none;font-size:inherit;font-weight:700;width:120px;padding:2px 6px;border:2px solid var(--coral);border-radius:6px;outline:none"
+      onblur="saveRename('${sid}','${pid}')" onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape')cancelRename('${sid}','${pid}')">
+    ${unlocked ? `<span style="font-size:12px;color:var(--gray-400);cursor:pointer" onclick="startRename('${sid}','${pid}')" title="改名">✏️</span>` : ''}
+    <span class="rarity-tag rarity-${p.rarity}">${RARITY_COLORS[p.rarity].label}</span>
+    <span class="text-sm text-muted">${s.name} 的${p.type==='dog'?'狗狗':'猫猫'}</span></h3>`;
+  html += `<div id="petAnimTarget" class="particle-container" style="text-align:center;margin:12px 0">${petSVG(p,80)}</div>`;
+  html += `<div class="pet-detail-stats">
+    <div><div class="flex-between text-sm mb-sm"><span>饱腹度</span><span>${p.hunger}%</span></div><div class="progress-bar"><div class="fill" style="width:${p.hunger}%;background:var(--amber)"></div></div></div>
+    <div><div class="flex-between text-sm mb-sm"><span>快乐值</span><span>${p.happiness}%</span></div><div class="progress-bar"><div class="fill" style="width:${p.happiness}%;background:var(--amber)"></div></div></div>
+    <div><div class="flex-between text-sm mb-sm"><span>清洁度</span><span>${p.cleanliness}%</span></div><div class="progress-bar"><div class="fill" style="width:${p.cleanliness}%;background:var(--blue)"></div></div></div>
+    <div><div class="flex-between text-sm mb-sm"><span>健康值</span><span>${p.health}%</span></div><div class="progress-bar"><div class="fill" style="width:${p.health}%;background:var(--green)"></div></div></div>
+  </div>`;
+  html += `<div class="grid-3 mt-md">
+    <button class="action-btn" ${unlocked&&s.points>=3?'':'disabled'} onclick="interactPet('${sid}','${pid}','feed')">🍖 喂食<span class="cost">-3分</span></button>
+    <button class="action-btn" ${unlocked&&s.points>=3?'':'disabled'} onclick="interactPet('${sid}','${pid}','play')">🎾 玩耍<span class="cost">-3分</span></button>
+    <button class="action-btn" ${unlocked&&s.points>=3?'':'disabled'} onclick="interactPet('${sid}','${pid}','clean')">🛁 清洁<span class="cost">-3分</span></button>
+    <button class="action-btn" ${unlocked&&s.points>=5?'':'disabled'} onclick="interactPet('${sid}','${pid}','heal')" style="grid-column:1/-1">💊 治疗<span class="cost">-5分</span></button>
+  </div>`;
+  html += `<div class="mt-md"><p class="text-sm font-weight:500">进化进度 · Lv.${p.evolution}/8 ${evoNames[p.evolution-1]}</p>`;
+  html += `<div class="evo-track">`;
+  for (let i = 0; i < 8; i++) {
+    const cls = i < p.evolution ? 'done' : i === p.evolution ? 'current' : '';
+    html += `<div class="evo-dot ${cls}">${i < p.evolution ? '✓' : (i+1)}</div>`;
+    if (i < 7) html += `<div class="evo-line ${i < p.evolution ? 'done' : ''}"></div>`;
+  }
+  html += `</div><div class="flex-between text-xs text-muted">`;
+  evoNames.forEach((n, i) => { html += `<span style="color:${i<p.evolution?'var(--green)':i===p.evolution?'var(--coral)':''}">${n}</span>`; });
+  html += `</div></div>`;
+  html += `<div class="mt-md"><span class="text-sm">已装备饰品：</span>`;
+  ['head','neck','back'].forEach(slot => {
+    const acc = p.accessories[slot];
+    html += `<span class="accessory-slot ${acc?'equipped':''}" style="display:inline-flex;margin:0 4px">${acc ? acc.icon : (slot==='head'?'帽':slot==='neck'?'颈':'背')}</span>`;
+  });
+  html += `</div>`;
+  if (unlocked) {
+    html += `<div class="mt-md"><button class="btn btn-red btn-sm" onclick="abandonPet('${sid}','${pid}')">弃养此宠物</button>
+    <span class="text-xs text-muted" style="margin-left:8px">弃养后进入领养中心，48小时后消失</span></div>`;
+  }
+  document.getElementById('petDetailContent').innerHTML = html;
+  document.getElementById('petDetailModal').classList.add('show');
+}
+function closePetDetail() {
+  document.getElementById('petDetailModal').classList.remove('show');
+  renderPanorama();
+}
+
+function startRename(sid, pid) {
+  if (!tryUnlock()) return;
+  const display = document.getElementById('petNameDisplay_' + pid);
+  const input = document.getElementById('petNameInput_' + pid);
+  if (!display || !input) return;
+  display.style.display = 'none';
+  input.style.display = 'inline-block';
+  input.focus();
+  input.select();
+}
+function saveRename(sid, pid) {
+  const display = document.getElementById('petNameDisplay_' + pid);
+  const input = document.getElementById('petNameInput_' + pid);
+  if (!display || !input) return;
+  const newName = input.value.trim();
+  display.style.display = '';
+  input.style.display = 'none';
+  if (!newName || newName === display.textContent) return;
+  const s = getStudent(sid);
+  const p = s.pets.find(p => p.id === pid);
+  if (!p) return;
+  p.name = newName;
+  display.textContent = newName;
+  saveData();
+  renderPanorama();
+  showToast(`宠物已更名为「${newName}」`, 'success');
+}
+function cancelRename(sid, pid) {
+  const display = document.getElementById('petNameDisplay_' + pid);
+  const input = document.getElementById('petNameInput_' + pid);
+  if (!display || !input) return;
+  input.value = display.textContent;
+  display.style.display = '';
+  input.style.display = 'none';
+}
+
+function interactPet(sid, pid, action) {
+  if (!tryUnlock()) return;
+  const s = getStudent(sid);
+  const p = s.pets.find(p => p.id === pid);
+  const cost = action === 'heal' ? 5 : 3;
+  if (s.points < cost) { showToast('积分不足', 'error'); return; }
+  s.points -= cost;
+  const gains = {feed:{h:15,hap:0,c:0,heal:0},play:{h:0,hap:20,c:0,heal:0},clean:{h:0,hap:0,c:20,heal:0},heal:{h:0,hap:0,c:0,heal:30}};
+  const g = gains[action];
+  p.hunger = Math.min(100, p.hunger + g.h);
+  p.happiness = Math.min(100, p.happiness + g.hap);
+  p.cleanliness = Math.min(100, p.cleanliness + g.c);
+  p.health = Math.min(100, p.health + g.heal);
+  const totalStatus = p.hunger + p.happiness + p.cleanliness + p.health;
+  const newEvo = Math.min(8, Math.floor(totalStatus / 120) + 1);
+  if (newEvo > p.evolution) { p.evolution = newEvo; showToast(`${p.name} 进化到 Lv.${p.evolution}！`, 'success'); }
+  saveData();
+  openPetDetail(sid, pid);
+  // 触发交互动画
+  triggerPetAnim(action);
+  renderPanorama();
+  showToast(`${action==='feed'?'喂食':action==='play'?'玩耍':action==='clean'?'清洁':'治疗'}成功！-${cost}分`, 'success');
+  // 新手任务：喂养你的宠物
+  if (action === 'feed') completeQuest(s, 'q3');
+}
+
+function triggerPetAnim(action) {
+  const particles = {feed:'🍖', play:'🎾', clean:'💧', heal:'💊'};
+  const emoji = particles[action];
+  setTimeout(() => {
+    const target = document.getElementById('petAnimTarget');
+    if (!target) return;
+    target.classList.add('anim-' + action);
+    setTimeout(() => target.classList.remove('anim-' + action), 600);
+    // 飘出粒子
+    for (let i = 0; i < 4; i++) {
+      setTimeout(() => {
+        const span = document.createElement('span');
+        span.className = 'particle-' + action;
+        span.textContent = emoji;
+        span.style.left = (25 + Math.random() * 50) + '%';
+        span.style.top = (30 + Math.random() * 20) + '%';
+        target.appendChild(span);
+        setTimeout(() => span.remove(), 900);
+      }, i * 100);
+    }
+  }, 80);
+}
+
+function abandonPet(sid, pid) {
+  if (!tryUnlock()) return;
+  const s = getStudent(sid);
+  const idx = s.pets.findIndex(p => p.id === pid);
+  if (idx === -1) return;
+  const pet = s.pets[idx];
+  DATA.adoptionCenter.push({pet:{...pet}, fromName: s.name, fromId: sid, abandonedAt: Date.now(), expiresAt: Date.now() + 48 * 3600000});
+  s.pets.splice(idx, 1);
+  saveData();
+  closePetDetail();
+  renderAll();
+  showToast(`${pet.name} 已进入领养中心`, 'info');
+}
+function adoptPet(idx) {
+  if (!tryUnlock()) return;
+  const entry = DATA.adoptionCenter[idx];
+  const adoptSelect = prompt('请输入领养学生的姓名（从现有学生中选择）：\n' + DATA.students.map(s => s.name).join('、'));
+  if (!adoptSelect) return;
+  const target = DATA.students.find(s => s.name === adoptSelect.trim());
+  if (!target) { showToast('找不到该学生', 'error'); return; }
+  const maxSlots = 2 + target.extraSlots;
+  if (target.pets.length >= maxSlots) { showToast('该学生宠物槽位已满', 'error'); return; }
+  const price = Math.floor((BOX_TYPES.find(b => b.name.includes(RARITY_COLORS[entry.pet.rarity].label)) || BOX_TYPES[0]).price * 0.5);
+  if (target.points < price) { showToast('该学生积分不足', 'error'); return; }
+  target.points -= price;
+  target.pets.push({...entry.pet, id: genId()});
+  DATA.adoptionCenter.splice(idx, 1);
+  saveData();
+  renderAll();
+  showToast(`${target.name} 领养了 ${entry.pet.name}！`, 'success');
+}
+
+function openBlindbox(boxIdx) {
+  if (!tryUnlock()) return;
+  const sid = document.getElementById('boxStudent').value;
+  if (!sid) { showToast('请先选择学生', 'error'); return; }
+  const s = getStudent(sid);
+  const maxSlots = 2 + s.extraSlots;
+  if (s.pets.length >= maxSlots) { showToast('该学生宠物槽位已满', 'error'); return; }
+  const box = BOX_TYPES[boxIdx];
+  if (s.points < box.price) { showToast('积分不足', 'error'); return; }
+  s.points -= box.price;
+  const pet = drawPet(box, sid);
+  const evoNames = pet.type === 'dog' ? EVO_NAMES_DOG : EVO_NAMES_CAT;
+  let html = `<div class="result-banner" style="background:${RARITY_COLORS[pet.rarity].bg}">
+    <div class="result-icon">${pet.type==='dog'?'🐕':'🐱'}</div>
+    <div class="result-name">${pet.name} <span class="rarity-tag rarity-${pet.rarity}">${RARITY_COLORS[pet.rarity].label}</span></div>
+    <p class="text-sm text-muted">${s.name} 获得了 ${RARITY_COLORS[pet.rarity].label} ${pet.type==='dog'?'狗狗':'猫猫'}！</p>
+    <div style="margin-top:10px">${petSVG(pet,60)}</div>
+    <p class="text-xs text-muted mt-sm">Lv.${pet.evolution} ${evoNames[pet.evolution-1]}</p>
+  </div>`;
+  document.getElementById('blindboxResult').innerHTML = html;
+  document.getElementById('blindboxResultModal').classList.add('show');
+  saveData();
+  renderAll();
+}
+function closeBlindboxResult() {
+  document.getElementById('blindboxResultModal').classList.remove('show');
+}
+
+function buyAcc(sid, pid, slot, name, price, rarity, icon) {
+  if (!tryUnlock()) return;
+  const s = getStudent(sid);
+  if (s.points < price) { showToast('积分不足', 'error'); return; }
+  s.points -= price;
+  if (!s.ownedAccessories) s.ownedAccessories = [];
+  s.ownedAccessories.push({name, slot, rarity, icon, price});
+  const p = s.pets.find(p => p.id === pid);
+  p.accessories[slot] = {name, icon, rarity};
+  saveData();
+  renderAccessoryItems();
+  showToast(`购买 ${name} 成功！`, 'success');
+}
+function equipAcc(sid, pid, slot, name, price, rarity, icon) {
+  if (!tryUnlock()) return;
+  const s = getStudent(sid);
+  if (!s.ownedAccessories) s.ownedAccessories = [];
+  const owned = s.ownedAccessories.find(a => a.name === name && a.slot === slot);
+  if (!owned) { showToast('请先购买此饰品', 'error'); return; }
+  const p = s.pets.find(p => p.id === pid);
+  p.accessories[slot] = {name, icon, rarity};
+  saveData();
+  renderAccessoryItems();
+  showToast(`已装备 ${name}`, 'success');
+}
+function unequipAcc(sid, pid, slot) {
+  if (!tryUnlock()) return;
+  const s = getStudent(sid);
+  const p = s.pets.find(p => p.id === pid);
+  p.accessories[slot] = null;
+  saveData();
+  renderAccessoryItems();
+  showToast('已卸下饰品', 'info');
+}
+
+function buySlot(sid) {
+  if (!tryUnlock()) return;
+  const s = getStudent(sid);
+  const cost = s.extraSlots === 0 ? 100 : s.extraSlots === 1 ? 200 : null;
+  if (!cost) { showToast('已达到最大槽位数', 'error'); return; }
+  if (s.points < cost) { showToast('积分不足', 'error'); return; }
+  s.points -= cost;
+  s.extraSlots++;
+  saveData();
+  renderAll();
+  showToast(`${s.name} 解锁新宠物槽位！(${2+s.extraSlots}个)`, 'success');
+}
+
+function addPointLog(s, dim, pts, note) {
+  if (!s.pointLogs) s.pointLogs = [];
+  s.pointLogs.unshift({
+    time: Date.now(),
+    dim: dim,
+    pts: pts,
+    teacherId: ACTIVE_TEACHER ? ACTIVE_TEACHER.id : '',
+    teacherName: getActiveTeacherName(),
+    note: note,
+  });
+  // Keep last 500 entries max per student
+  if (s.pointLogs.length > 500) s.pointLogs = s.pointLogs.slice(0, 500);
+}
+
+function directAward() {
+  if (!tryUnlock()) return;
+  const sid = document.getElementById('awardStudent').value;
+  const dim = document.getElementById('awardDimension').value;
+  const pts = parseInt(document.getElementById('awardPoints').value);
+  if (!sid || !dim || isNaN(pts)) { showToast('请完整填写', 'error'); return; }
+  const s = getStudent(sid);
+  if (!checkWeeklyCap(s, dim)) {
+    showToast(`${DIM_LABELS[dim]}本周已达上限（${WEEKLY_CAPS[dim]}次/周）`, 'error'); return;
+  }
+  const bonus = getFirstWeekMultiplier();
+  const actualPts = Math.round(pts * bonus);
+  s.points += actualPts;
+  addPointLog(s, dim, actualPts, `教师直接奖励（${DIM_LABELS[dim]}）`);
+  saveData();
+  renderAll();
+  const bonusText = bonus > 1 ? ` (首周 ×${bonus}倍)` : '';
+  showToast(`${s.name} +${actualPts}分（${DIM_LABELS[dim]}）${bonusText}`, 'success');
+  // 新手任务：课堂发言
+  if (dim === 'academic') completeQuest(s, 'q2');
+}
+document.getElementById('awardDimension').onchange = function() {
+  const dim = this.value;
+  const ptsSelect = document.getElementById('awardPoints');
+  ptsSelect.innerHTML = '<option value="">选择分值</option>' + (DIM_POINTS[dim] || []).map(p => `<option value="${p}">+${p}</option>`).join('');
+};
+
+function approveNomination(idx) {
+  if (!tryUnlock()) return;
+  const n = DATA.pendingNominations[idx];
+  const to = DATA.students.find(s => s.name === n.to);
+  if (!to) { showToast('找不到学生', 'error'); return; }
+  // 检查服务/领导力周上限
+  if (!checkWeeklyCap(to, n.dimension)) {
+    showToast(`${DIM_LABELS[n.dimension]}本周已达上限（${WEEKLY_CAPS[n.dimension]}次/周）`, 'error'); return;
+  }
+  const today = new Date().toISOString().slice(0,10);
+  if (to.nominatedDate !== today) { to.nominatedToday = 0; to.nominatedDate = today; }
+  to.nominatedToday++;
+  const pts = DIM_POINTS[n.dimension][Math.floor(Math.random() * DIM_POINTS[n.dimension].length)];
+  const bonus = getFirstWeekMultiplier();
+  const actualPts = Math.round(pts * bonus);
+  to.points += actualPts;
+  addPointLog(to, n.dimension, actualPts, `同伴提名·通过（提名者：${n.from}）`);
+  DATA.pendingNominations.splice(idx, 1);
+  saveData();
+  renderAll();
+  const bonusText = bonus > 1 ? ` (首周 ×${bonus}倍)` : '';
+  showToast(`${n.to} +${actualPts}分！提名通过${bonusText}`, 'success');
+  // 新手任务：提名一位同学
+  completeQuest(to, 'q1');
+}
+function rejectNomination(idx) {
+  if (!tryUnlock()) return;
+  DATA.pendingNominations.splice(idx, 1);
+  saveData();
+  renderAll();
+  showToast('提名已拒绝', 'info');
+}
+function approveSelfReport(idx) {
+  if (!tryUnlock()) return;
+  const r = DATA.pendingSelfReports[idx];
+  const ptsEl = document.getElementById('srPoints' + idx);
+  const pts = ptsEl ? parseInt(ptsEl.value) : DIM_POINTS[r.dimension][0];
+  const s = DATA.students.find(s => s.name === r.studentName);
+  if (!s) { showToast('找不到学生', 'error'); return; }
+  if (!checkWeeklyCap(s, r.dimension)) {
+    showToast(`${DIM_LABELS[r.dimension]}本周已达上限（${WEEKLY_CAPS[r.dimension]}次/周）`, 'error'); return;
+  }
+  const bonus = getFirstWeekMultiplier();
+  const actualPts = Math.round(pts * bonus);
+  s.points += actualPts;
+  addPointLog(s, r.dimension, actualPts, `自我申报·通过（${r.reason}）`);
+  DATA.pendingSelfReports.splice(idx, 1);
+  saveData();
+  renderAll();
+  const bonusText = bonus > 1 ? ` (首周 ×${bonus}倍)` : '';
+  showToast(`${r.studentName} +${actualPts}分！申报通过${bonusText}`, 'success');
+}
+function rejectSelfReport(idx) {
+  if (!tryUnlock()) return;
+  DATA.pendingSelfReports.splice(idx, 1);
+  saveData();
+  renderAll();
+  showToast('申报已拒绝', 'info');
+}
+
+function openNominateModal() {
+  const namesHtml = DATA.students.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+  document.getElementById('nominatorName').innerHTML = '<option value="">选择自己的名字</option>' + namesHtml;
+  document.getElementById('nominateTarget').innerHTML = '<option value="">选择同学</option>' + namesHtml;
+  document.getElementById('nominateReason').value = '';
+  document.getElementById('studentNominateModal').classList.add('show');
+}
+function closeNominateModal() { document.getElementById('studentNominateModal').classList.remove('show'); }
+function submitNomination() {
+  const self = document.getElementById('nominatorName').value;
+  const target = document.getElementById('nominateTarget').value;
+  const dim = document.getElementById('nominateDimension').value;
+  const reason = document.getElementById('nominateReason').value.trim();
+  if (!self || !target || !reason) { showToast('请完整填写', 'error'); return; }
+  if (self === target) { showToast('不能提名自己', 'error'); return; }
+  const nominator = DATA.students.find(s => s.name === self);
+  if (!nominator) { showToast('找不到你的名字', 'error'); return; }
+  const targetStudent = DATA.students.find(s => s.name === target);
+  if (!targetStudent) { showToast('找不到被提名同学', 'error'); return; }
+  const today = new Date().toISOString().slice(0,10);
+  if (nominator.nominationDate !== today) { nominator.todayNominations = 0; nominator.nominationDate = today; }
+  const nomLimit = isFirstWeek() ? 4 : 2;
+  if (nominator.todayNominations >= nomLimit) { showToast(`你今天已经提名 ${nomLimit} 次了`, 'error'); return; }
+  // 检查被提名人今日是否已达上限
+  if (targetStudent.nominatedDate !== today) { targetStudent.nominatedToday = 0; targetStudent.nominatedDate = today; }
+  if (targetStudent.nominatedToday >= DAILY_NOMINATED_CAP) { showToast(`${target} 今日已被提名 ${DAILY_NOMINATED_CAP} 次，已达上限`, 'error'); return; }
+  nominator.todayNominations++;
+  DATA.pendingNominations.push({from: self, to: target, dimension: dim, reason, time: Date.now()});
+  saveData();
+  closeNominateModal();
+  renderAll();
+  showToast('提名已提交，等待教师审核', 'success');
+}
+
+function openSelfReportModal() {
+  document.getElementById('reportStudentName').innerHTML = '<option value="">选择自己的名字</option>' + DATA.students.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+  document.getElementById('reportReason').value = '';
+  document.getElementById('selfReportModal').classList.add('show');
+}
+function closeSelfReportModal() { document.getElementById('selfReportModal').classList.remove('show'); }
+function submitSelfReport() {
+  const sname = document.getElementById('reportStudentName').value;
+  const dim = document.getElementById('reportDimension').value;
+  const reason = document.getElementById('reportReason').value.trim();
+  if (!sname || !reason) { showToast('请完整填写', 'error'); return; }
+  if (!DATA.students.find(s => s.name === sname)) { showToast('无效姓名', 'error'); return; }
+  DATA.pendingSelfReports.push({studentName: sname, dimension: dim, reason, time: Date.now()});
+  saveData();
+  closeSelfReportModal();
+  renderAll();
+  showToast('申报已提交，等待教师核实', 'success');
+}
+
+function exportData() {
+  if (!tryUnlock()) return;
+  const blob = new Blob([JSON.stringify(DATA, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `class-pet-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
+  URL.revokeObjectURL(url);
+  showToast('数据已导出', 'success');
+}
+function importData(event) {
+  if (!tryUnlock()) { event.target.value = ''; return; }
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!imported.students) throw new Error('invalid');
+      DATA = {...getDefaultData(), ...imported};
+      DATA.students = DATA.students.map(s => ({...getDefaultData().students[0], ...s, pets: (s.pets||[]).map(p => ({...p, id: p.id||genId()}))}));
+      saveData();
+      renderAll();
+      showToast('数据导入成功！', 'success');
+    } catch(err) { showToast('文件格式错误', 'error'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+function resetAll() {
+  if (!tryUnlock()) return;
+  if (!confirm('确定要重置全部数据吗？此操作不可撤销！\n建议先导出备份。')) return;
+  if (!confirm('再次确认：重置后所有学生、宠物、积分数据将清空。')) return;
+  DATA = getDefaultData();
+  saveData();
+  lockSystem();
+  renderAll();
+  showToast('数据已重置', 'info');
+}
+
+// ========== 批量恢复积分 ==========
+const DIM_KEYS = ['academic','collaboration','service','leadership','growth'];
+let pendingBatchImport = []; // 预览后待确认的导入数据
+
+function switchRecoveryTab(tab) {
+  document.getElementById('recBatch').style.display = tab === 'batch' ? '' : 'none';
+  document.getElementById('recSingle').style.display = tab === 'single' ? '' : 'none';
+  document.getElementById('recTabBatch').classList.toggle('active', tab === 'batch');
+  document.getElementById('recTabSingle').classList.toggle('active', tab === 'single');
+  if (tab === 'single') initRecSingleForm();
+}
+
+function initRecSingleForm() {
+  const sel = document.getElementById('recSingleStudent');
+  sel.innerHTML = '<option value="">选择学生</option>' + DATA.students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  document.getElementById('recSingleDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('recSingleMsg').textContent = '';
+}
+
+function previewBatchImport() {
+  if (!tryUnlock()) return;
+  const raw = document.getElementById('recoveryJsonInput').value.trim();
+  if (!raw) { showToast('请先粘贴 JSON 数据', 'error'); return; }
+  let entries;
+  try { entries = JSON.parse(raw); } catch(e) { showToast('JSON 格式错误，请检查', 'error'); return; }
+  if (!Array.isArray(entries)) { showToast('JSON 必须是数组格式 [{...}]', 'error'); return; }
+
+  // Validate and prepare
+  pendingBatchImport = [];
+  const errors = [];
+  const preview = document.getElementById('recoveryPreview');
+  let html = '<table><tr><th>状态</th><th>学生</th><th>维度</th><th>分数</th><th>日期</th><th>备注</th></tr>';
+
+  entries.forEach((e, i) => {
+    const rowErrors = [];
+    if (!e.name) rowErrors.push('缺少name');
+    if (!DIM_KEYS.includes(e.dim)) rowErrors.push(`无效dim:${e.dim}`);
+    if (typeof e.pts !== 'number' || e.pts <= 0) rowErrors.push('pts无效');
+    if (rowErrors.length === 0) {
+      const student = DATA.students.find(s => s.name === e.name || s.name.toLowerCase() === e.name.toLowerCase());
+      if (!student) rowErrors.push(`学生"${e.name}"不存在`);
+    }
+    if (rowErrors.length > 0) {
+      errors.push(`第${i+1}条: ${rowErrors.join('; ')}`);
+      html += `<tr class="row-error"><td>❌</td><td>${e.name||'?'}</td><td>${e.dim||'?'}</td><td>${e.pts||'?'}</td><td>${e.date||'今天'}</td><td>${rowErrors.join(', ')}</td></tr>`;
+    } else {
+      const student = DATA.students.find(s => s.name === e.name || s.name.toLowerCase() === e.name.toLowerCase());
+      html += `<tr class="row-ok"><td>✅</td><td>${student.name}</td><td>${DIM_LABELS[e.dim]}</td><td>+${e.pts}</td><td>${e.date||'今天'}</td><td>${e.note||''}</td></tr>`;
+      pendingBatchImport.push({
+        studentId: student.id,
+        dim: e.dim,
+        pts: e.pts,
+        note: e.note || '批量恢复',
+        date: e.date || new Date().toISOString().slice(0,10)
+      });
+    }
+  });
+  html += '</table>';
+
+  preview.innerHTML = html;
+  preview.style.display = 'block';
+  document.getElementById('btnExecImport').disabled = pendingBatchImport.length === 0;
+  document.getElementById('recoveryStatus').textContent = pendingBatchImport.length > 0
+    ? `共 ${entries.length} 条，${pendingBatchImport.length} 条有效可导入`
+    : `共 ${entries.length} 条，全部无效`;
+  if (errors.length > 0) {
+    document.getElementById('recoveryStatus').textContent += ` | ${errors.length} 条错误`;
+  }
+}
+
+function executeBatchImport() {
+  if (!tryUnlock()) return;
+  if (pendingBatchImport.length === 0) { showToast('没有可导入的数据', 'error'); return; }
+  const totalPts = pendingBatchImport.reduce((sum, e) => sum + e.pts, 0);
+  const students = [...new Set(pendingBatchImport.map(e => {
+    const s = DATA.students.find(st => st.id === e.studentId);
+    return s ? s.name : '?';
+  }))].join('、');
+  if (!confirm(`确认导入以下积分记录？\n\n学生：${students}\n共计：${pendingBatchImport.length} 条，${totalPts} 分\n\n导入后不可撤销（可在积分历史中逐条撤销）。`)) return;
+
+  let imported = 0;
+  pendingBatchImport.forEach(e => {
+    const s = getStudent(e.studentId);
+    if (!s) return;
+    s.points += e.pts;
+    // Build a timestamp from the date string
+    const dateTs = e.date ? new Date(e.date + 'T12:00:00+08:00').getTime() : Date.now();
+    if (!s.pointLogs) s.pointLogs = [];
+    s.pointLogs.unshift({
+      time: dateTs,
+      dim: e.dim,
+      pts: e.pts,
+      teacherId: ACTIVE_TEACHER ? ACTIVE_TEACHER.id : '',
+      teacherName: getActiveTeacherName(),
+      note: '(批量恢复) ' + (e.note || ''),
+    });
+    if (s.pointLogs.length > 500) s.pointLogs = s.pointLogs.slice(0, 500);
+    imported++;
+  });
+
+  saveData();
+  renderAll();
+  showToast(`✅ 成功恢复 ${imported} 条记录，共 ${totalPts} 分`, 'success');
+
+  // Clear
+  pendingBatchImport = [];
+  document.getElementById('recoveryPreview').style.display = 'none';
+  document.getElementById('btnExecImport').disabled = true;
+  document.getElementById('recoveryStatus').textContent = `上次导入：${imported} 条`;
+}
+
+function quickAddPointLog() {
+  if (!tryUnlock()) return;
+  const sid = document.getElementById('recSingleStudent').value;
+  const dim = document.getElementById('recSingleDim').value;
+  const pts = parseInt(document.getElementById('recSinglePts').value);
+  const note = document.getElementById('recSingleNote').value.trim();
+  const date = document.getElementById('recSingleDate').value;
+  if (!sid || !dim || isNaN(pts) || pts <= 0) {
+    document.getElementById('recSingleMsg').textContent = '请完整填写所有字段';
+    return;
+  }
+  const s = getStudent(sid);
+  if (!s) return;
+  s.points += pts;
+  const dateTs = date ? new Date(date + 'T12:00:00+08:00').getTime() : Date.now();
+  if (!s.pointLogs) s.pointLogs = [];
+  s.pointLogs.unshift({
+    time: dateTs,
+    dim: dim,
+    pts: pts,
+    teacherId: ACTIVE_TEACHER ? ACTIVE_TEACHER.id : '',
+    teacherName: getActiveTeacherName(),
+    note: '(手动补录) ' + (note || ''),
+  });
+  if (s.pointLogs.length > 500) s.pointLogs = s.pointLogs.slice(0, 500);
+  saveData();
+  renderAll();
+  document.getElementById('recSingleMsg').textContent = `✅ 已为 ${s.name} 补录 +${pts} 分（${DIM_LABELS[dim]}）`;
+  document.getElementById('recSinglePts').value = '';
+  document.getElementById('recSingleNote').value = '';
+  showToast(`已补录 ${s.name} +${pts}分`, 'success');
+}
+
+function switchTab(idx) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.tab-btn[data-tab="${idx}"]`).classList.add('active');
+  document.getElementById(`panel-${idx}`).classList.add('active');
+  if (idx === 0) renderPanorama();
+  if (idx === 1) renderPointsPanel();
+  if (idx === 2) renderBlindboxShop();
+  if (idx === 3) renderAccessoryShop();
+  if (idx === 4) renderAdoptionCenter();
+  if (idx === 5) renderTeacherMgr();
+}
+
+// ========== 教师管理 ==========
+function renderTeacherMgr() {
+  const div = document.getElementById('teacherMgr');
+  const isAdmin = ACTIVE_TEACHER && DATA.teachers.find(t => t.id === ACTIVE_TEACHER.id)?.isAdmin;
+  if (!isUnlocked() || !isAdmin) {
+    div.innerHTML = '<p class="text-sm text-muted">需要管理员账号登录后才能管理教师账户</p>';
+    return;
+  }
+  div.innerHTML = '<table><tr><th>账号</th><th>显示名</th><th>角色</th><th>操作</th></tr>' +
+    DATA.teachers.map(t => `
+      <tr>
+        <td>${t.username}</td>
+        <td>${t.displayName}</td>
+        <td>${t.isAdmin?'管理员':'教师'}</td>
+        <td>
+          <button class="btn btn-sm" onclick="changeTeacherPwd('${t.id}')">改密码</button>
+          ${!t.isAdmin ? `<button class="btn btn-sm btn-red" onclick="removeTeacher('${t.id}')">删除</button>` : ''}
+        </td>
+      </tr>
+    `).join('') + '</table>';
+}
+
+function addTeacher() {
+  if (!tryUnlock()) return;
+  const u = document.getElementById('newTeacherUser').value.trim();
+  const n = document.getElementById('newTeacherName').value.trim();
+  const p = document.getElementById('newTeacherPwd').value.trim();
+  const isAdmin = document.getElementById('newTeacherAdmin').checked;
+  if (!u || !n || !p) { showToast('请填写所有字段', 'error'); return; }
+  if (DATA.teachers.find(t => t.username === u)) { showToast('账号已存在', 'error'); return; }
+  if (p.length < 3) { showToast('密码至少3位', 'error'); return; }
+  DATA.teachers.push({ id:'t'+Date.now(), username:u, displayName:n, password:p, isAdmin });
+  document.getElementById('newTeacherUser').value = '';
+  document.getElementById('newTeacherName').value = '';
+  document.getElementById('newTeacherPwd').value = '';
+  document.getElementById('newTeacherAdmin').checked = false;
+  saveData();
+  renderTeacherMgr();
+  showToast('教师 ' + n + ' 已添加', 'success');
+}
+
+function removeTeacher(tid) {
+  if (!tryUnlock()) return;
+  const t = DATA.teachers.find(t => t.id === tid);
+  if (!t) return;
+  if (t.isAdmin) { showToast('不能删除管理员', 'error'); return; }
+  if (!confirm('确定删除教师 ' + t.displayName + ' 吗？')) return;
+  DATA.teachers = DATA.teachers.filter(t => t.id !== tid);
+  saveData();
+  renderTeacherMgr();
+  showToast('已删除', 'info');
+}
+
+function changeTeacherPwd(tid) {
+  if (!tryUnlock()) return;
+  const np = prompt('请输入新密码（至少3位）：');
+  if (!np || np.length < 3) { showToast('密码至少3位', 'error'); return; }
+  const t = DATA.teachers.find(t => t.id === tid);
+  if (!t) return;
+  t.password = np;
+  saveData();
+  renderTeacherMgr();
+  showToast('密码已更新', 'success');
+}
+
+// ========== 积分历史查询 ==========
+function renderPointHistory() {
+  const sid = document.getElementById('phStudent').value;
+  const tid = document.getElementById('phTeacher').value;
+  const div = document.getElementById('pointHistoryContent');
+  
+  // Populate student dropdown if not already done
+  const sSelect = document.getElementById('phStudent');
+  if (sSelect.options.length <= 1) {
+    sSelect.innerHTML = '<option value="">选择学生</option>' + 
+      DATA.students.map(s => `<option value="${s.id}">${s.name}（${s.points}分）</option>`).join('');
+  }
+  // Populate teacher dropdown
+  const tSelect = document.getElementById('phTeacher');
+  tSelect.innerHTML = '<option value="">全部教师</option>' + 
+    DATA.teachers.map(t => `<option value="${t.id}">${t.displayName}</option>`).join('');
+  
+  if (!sid) { div.innerHTML = '<p class="text-sm text-muted">请选择学生查看积分历史</p>'; return; }
+  
+  const s = getStudent(sid);
+  if (!s) { div.innerHTML = '<p class="text-sm text-muted">学生不存在</p>'; return; }
+  if (!s.pointLogs || s.pointLogs.length === 0) {
+    div.innerHTML = '<p class="text-sm text-muted">暂无积分记录</p>'; return;
+  }
+  
+  let logs = s.pointLogs;
+  if (tid) {
+    logs = logs.filter(l => l.teacherId === tid);
+  }
+  if (logs.length === 0) {
+    div.innerHTML = '<p class="text-sm text-muted">该教师暂无此学生的加分记录</p>'; return;
+  }
+  
+  // Check if current teacher can revoke
+  const curTeacher = ACTIVE_TEACHER;
+  const curIsAdmin = curTeacher && DATA.teachers.find(t => t.id === curTeacher.id)?.isAdmin;
+  
+  div.innerHTML = `<p class="text-sm text-muted mb-sm">共 ${logs.length} 条记录</p>
+    <table>
+      <tr><th>时间</th><th>教师</th><th>维度</th><th>分数</th><th>备注</th><th style="width:60px"></th></tr>
+      ${logs.map((l, idx) => {
+        const d = new Date(l.time);
+        const ds = d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+        const revoked = l.revoked === true;
+        const canRevoke = !revoked && curTeacher && (curIsAdmin || l.teacherId === curTeacher.id);
+        const ptsClass = revoked ? 'point-log-neg' : 'point-log-pos';
+        const ptsText = revoked ? `已撤销（-${l.pts}）` : `+${l.pts}`;
+        return `<tr class="point-log-row${revoked?' point-log-revoked':''}">
+          <td>${ds}</td>
+          <td><span class="point-log-teacher">${l.teacherName||'系统'}</span></td>
+          <td>${DIM_LABELS[l.dim]||l.dim||'-'}</td>
+          <td class="${ptsClass}">${ptsText}</td>
+          <td class="text-xs text-muted">${l.note||''}</td>
+          <td>${canRevoke ? `<button class="revoke-btn" onclick="revokePointLog('${sid}', ${l.time})">撤销</button>` : revoked ? '<span class="text-xs text-muted">已撤销</span>' : ''}</td>
+        </tr>`;
+      }).join('')}
+    </table>`;
+}
+
+function revokePointLog(sid, logTime) {
+  if (!tryUnlock()) return;
+  const s = getStudent(sid);
+  if (!s || !s.pointLogs) return;
+  
+  // Find the log entry by time
+  const logIdx = s.pointLogs.findIndex(l => l.time === logTime);
+  if (logIdx === -1) { showToast('记录不存在', 'error'); return; }
+  const log = s.pointLogs[logIdx];
+  
+  // Already revoked
+  if (log.revoked) { showToast('该记录已被撤销', 'error'); return; }
+  
+  // Permission: only the awarding teacher or admin can revoke
+  const curTeacher = ACTIVE_TEACHER;
+  const curIsAdmin = curTeacher && DATA.teachers.find(t => t.id === curTeacher.id)?.isAdmin;
+  if (!curTeacher) { showToast('请先登录', 'error'); return; }
+  if (!curIsAdmin && log.teacherId !== curTeacher.id) {
+    showToast('只能撤销自己加的分', 'error'); return;
+  }
+  
+  // Check if student has enough points
+  if (s.points < log.pts) {
+    showToast(`${s.name} 积分不足（当前 ${s.points} 分，需要扣回 ${log.pts} 分）`, 'error'); return;
+  }
+  
+  // Confirm
+  const d = new Date(log.time);
+  const ds = d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+  if (!confirm(`确认撤销以下加分？\n\n${s.name} · ${DIM_LABELS[log.dim] || log.dim} · +${log.pts}分\n${ds}\n${log.note || ''}\n\n撤销后将扣除 ${log.pts} 分，当前积分 ${s.points} → ${s.points - log.pts}`)) return;
+  
+  // Execute revoke
+  s.points -= log.pts;
+  log.revoked = true;
+  log.revokeTime = Date.now();
+  log.revokeBy = curTeacher.displayName;
+  
+  saveData();
+  renderPointHistory();
+  renderAll();
+  showToast(`已撤销 ${DIM_LABELS[log.dim] || log.dim} +${log.pts}分，${s.name} 扣除 ${log.pts} 分`, 'info');
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', function() { switchTab(parseInt(this.dataset.tab)); });
+});
+
+document.getElementById('pinBadge').addEventListener('click', togglePinModal);
+
+async function init() {
+  console.log('🚀 [sync] init() started');
+  loadData();
+  console.log('🚀 [sync] loadData() done, DATA.students[0].points=' + DATA.students[0].points + ', SYNC_STATUS=' + SYNC_STATUS);
+  // ⚠️ 关键：先拉取云端数据，再执行任何会触发 saveData 的操作
+  // 防止新设备默认 0 分数据覆盖云端已有数据
+  await cloudPull();
+  console.log('🚀 [sync] cloudPull() done, SYNC_STATUS=' + SYNC_STATUS);
+  // 云端同步完成后再运行每日维护（此时数据已是最新）
+  runMaintenance();
+  updatePinUI();
+  renderAll();
+  // 定时检查云端更新（每60秒）
+  setInterval(cloudPull, 60000);
+}
+
+// 页面关闭前强制同步到云端
+window.addEventListener('beforeunload', function() {
+  // Clear the debounce timer
+  if (syncTimer) { clearTimeout(syncTimer); syncTimer = null; }
+  // Use fetch with keepalive for reliable exit-time PUT
+  DATA._lastModified = Date.now();
+  localStorage.setItem('class_pet_system', JSON.stringify(DATA));
+  fetch(CLOUD_URL, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(DATA),
+    keepalive: true
+  }).catch(function(){});
+});
+
+// Also sync on visibility change (tab hidden)
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden && syncTimer) {
+    clearTimeout(syncTimer);
+    syncTimer = null;
+    cloudPush();
+  }
+});
+
+document.addEventListener('DOMContentLoaded', init);
+
+setInterval(() => {
+  if (UNLOCKED && Date.now() - DATA.unlockedSince > DATA.autoLockMinutes * 60000) {
+    lockSystem();
+  }
+}, 30000);
+</script>
+</body>
+</html>
