@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>家庭英雄联盟</title>
+<style>
+:root {
+  --gold: #D4912A; --gold-bg: #FFF8EC; --gold-dark: #8B5E14;
+  --red: #C53030; --red-bg: #FFF0F0; --red-dark: #8B1A1A;
+  --blue: #378ADD; --blue-bg: #E6F1FB; --blue-dark: #185FA5;
+  --green: #4A9B2F; --green-bg: #EDF7E8; --green-dark: #2D6B18;
+  --purple: #7F77DD; --purple-bg: #EEEDFE; --purple-dark: #534AB7;
+  --teal: #1D9E75; --teal-bg: #E1F5EE; --teal-dark: #0F6E56;
+  --amber: #EF9F27; --amber-bg: #FAEEDA; --amber-dark: #854F0B;
+  --pink: #D4537E; --pink-bg: #FBEAF0; --pink-dark: #993556;
+  --gray-50: #F5F3EE; --gray-100: #E6E3DC; --gray-200: #D5D2CA; --gray-400: #B4B2A9;
+  --gray-500: #888780; --gray-600: #5F5E5A; --gray-700: #444441; --gray-800: #2C2C2A;
+  --bg: #FDFCF9; --card: #FFFFFF; --border: #E0DED5;
+  --radius: 12px; --radius-sm: 8px;
+  --myth-red: #D4343E; --myth-gold: #E8B44F; --myth-dark: #1A1520;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--gray-800); line-height: 1.6; }
+button { cursor: pointer; font-family: inherit; }
+button:disabled { cursor: not-allowed; opacity: 0.5; }
+
+.app { max-width: 960px; margin: 0 auto; padding: 16px 20px 40px; }
+
+.header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: linear-gradient(135deg, var(--myth-dark), #2D2038); color: #fff; border-radius: var(--radius); margin-bottom: 16px; }
+.header-left { display: flex; align-items: center; gap: 12px; }
+.header-left h1 { font-size: 20px; font-weight: 600; }
+.header-left .sub { font-size: 12px; opacity: 0.7; }
+.header-actions { display: flex; gap: 8px; align-items: center; }
+.header-actions button { background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.2); font-size: 12px; padding: 6px 14px; border-radius: 20px; }
+.header-actions button:hover { background: rgba(255,255,255,0.2); }
+.sync-badge-fh { font-size: 11px; padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+.sync-badge-fh.sync-local { border-color: rgba(255,255,255,0.3); }
+.sync-badge-fh.sync-synced { border-color: #4ADE80; background: rgba(74,222,128,0.15); }
+.sync-badge-fh.sync-error { border-color: #F87171; background: rgba(248,113,113,0.15); }
+.sync-badge-fh.sync-syncing { animation: syncPulse 0.8s infinite; }
+@keyframes syncPulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+.kid-switch { display: flex; gap: 8px; margin-bottom: 16px; }
+.kid-btn { flex: 1; padding: 12px 20px; border: 2px solid var(--border); border-radius: var(--radius); background: var(--card); font-size: 15px; font-weight: 500; transition: all 0.2s; text-align: center; }
+.kid-btn:hover { border-color: var(--gold); }
+.kid-btn.active { border-color: var(--myth-red); background: var(--red-bg); color: var(--myth-red); }
+.kid-btn .kid-points { display: block; font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+.kid-btn.active .kid-points { color: var(--myth-red); }
+
+.tabs { display: flex; gap: 0; border-bottom: 0.5px solid var(--border); margin-bottom: 16px; background: var(--card); border-radius: var(--radius) var(--radius) 0 0; padding: 0 8px; overflow-x: auto; }
+.tab-btn { font-size: 13px; font-weight: 500; padding: 10px 16px; border: none; background: transparent; color: var(--gray-500); border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; flex-shrink: 0; }
+.tab-btn:hover { color: var(--gray-700); }
+.tab-btn.active { color: var(--myth-red); border-bottom-color: var(--myth-red); }
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+.card { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 14px; }
+.card-header { font-size: 14px; font-weight: 500; margin-bottom: 14px; color: var(--gray-700); }
+
+.grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
+
+.hero-card { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; cursor: pointer; transition: all 0.2s; }
+.hero-card:hover { border-color: var(--myth-red); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(212,52,62,0.1); }
+.hero-card .hero-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.hero-card .hero-icon { width: 56px; height: 56px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 32px; background: linear-gradient(135deg, var(--myth-dark), #2D2038); overflow: hidden; }
+.hero-card .hero-icon img { width: 100%; height: 100%; object-fit: cover; }
+.hero-card .hero-info { flex: 1; min-width: 0; }
+.hero-card .hero-name { font-size: 14px; font-weight: 600; }
+.hero-card .hero-owner { font-size: 11px; color: var(--gray-500); }
+.hero-card .hero-stats { display: flex; flex-direction: column; gap: 3px; }
+.hero-card .stat-row { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--gray-500); }
+.hero-card .stat-row .bar { flex: 1; height: 4px; background: var(--gray-50); border-radius: 2px; overflow: hidden; }
+.hero-card .stat-row .bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+.hero-card .hero-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 10px; color: var(--gray-500); }
+
+.rarity-tag { font-size: 10px; padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+.rarity-common { background: var(--gray-50); color: var(--gray-600); }
+.rarity-rare { background: var(--blue-bg); color: var(--blue-dark); }
+.rarity-epic { background: var(--purple-bg); color: var(--purple-dark); }
+.rarity-legendary { background: var(--gold-bg); color: var(--gold-dark); }
+
+.screen-card { background: var(--card); border: 2px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.screen-card.warning { border-color: var(--amber); background: var(--amber-bg); }
+.screen-card.danger { border-color: var(--red); background: var(--red-bg); }
+.screen-card.good { border-color: var(--green); background: var(--green-bg); }
+
+.screen-phase-track { display: flex; align-items: center; gap: 0; margin: 16px 0; }
+.phase-dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--gray-200); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; flex-shrink: 0; background: var(--card); }
+.phase-dot.done { background: var(--green); border-color: var(--green); color: #fff; }
+.phase-dot.current { border-color: var(--myth-red); color: var(--myth-red); background: var(--red-bg); }
+.phase-dot.future { opacity: 0.4; }
+.phase-line { flex: 1; height: 2px; background: var(--gray-100); min-width: 8px; }
+.phase-line.done { background: var(--green); }
+
+.task-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.task-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--gray-50); border-radius: var(--radius-sm); font-size: 12px; }
+.task-item .task-label { display: flex; align-items: center; gap: 6px; }
+.task-item .task-btn { font-size: 11px; padding: 4px 12px; border-radius: 14px; border: 1px solid var(--green); background: var(--green-bg); color: var(--green-dark); font-weight: 500; }
+.task-item .task-btn:hover { background: var(--green); color: #fff; }
+
+.evo-track { display: flex; align-items: center; gap: 0; margin: 12px 0; }
+.evo-dot { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--gray-200); display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; background: var(--card); }
+.evo-dot.done { background: var(--green); border-color: var(--green); color: #fff; }
+.evo-dot.current { border-color: var(--myth-red); color: var(--myth-red); font-weight: 500; }
+.evo-line { flex: 1; height: 2px; background: var(--gray-100); min-width: 8px; }
+.evo-line.done { background: var(--green); }
+
+.progress-bar { height: 8px; background: var(--gray-50); border-radius: 4px; overflow: hidden; }
+.progress-bar .fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+
+.blindbox-card { text-align: center; padding: 16px; border: 2px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all 0.2s; }
+.blindbox-card:hover { border-color: var(--myth-red); transform: translateY(-2px); }
+.blindbox-card .box-icon { font-size: 40px; margin-bottom: 8px; }
+.blindbox-card .box-name { font-size: 14px; font-weight: 500; }
+.blindbox-card .box-price { font-size: 12px; color: var(--gray-500); margin-top: 4px; }
+.blindbox-card .box-odds { font-size: 10px; color: var(--gray-400); margin-top: 4px; }
+
+.shop-item { border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+.shop-item .item-icon { font-size: 28px; margin-bottom: 6px; }
+.shop-item .item-name { font-size: 12px; font-weight: 500; }
+.shop-item .item-price { font-size: 11px; color: var(--gray-500); margin-top: 4px; }
+
+.accessory-slot { width: 40px; height: 40px; border: 1px dashed var(--gray-200); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.accessory-slot.equipped { border-style: solid; border-color: var(--myth-red); background: var(--red-bg); }
+
+.result-banner { text-align: center; padding: 20px; border-radius: var(--radius); margin-bottom: 12px; }
+.result-banner .result-icon { font-size: 56px; margin-bottom: 8px; }
+.result-banner .result-icon img { width: 100px; height: 100px; object-fit: contain; border-radius: 16px; }
+.result-banner .result-name { font-size: 18px; font-weight: 600; }
+
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 100; align-items: center; justify-content: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--card); border-radius: var(--radius); padding: 24px; max-width: 520px; width: 90%; max-height: 80vh; overflow-y: auto; }
+.modal h3 { font-size: 16px; font-weight: 500; margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+.btn { font-size: 13px; padding: 8px 18px; border-radius: var(--radius-sm); border: 0.5px solid var(--border); background: var(--card); color: var(--gray-700); font-weight: 500; }
+.btn:hover { border-color: var(--gray-400); }
+.btn-primary { background: var(--myth-red); color: #fff; border-color: var(--myth-red); }
+.btn-primary:hover { background: #B82D35; }
+.btn-sm { font-size: 11px; padding: 4px 12px; }
+.btn-green { background: var(--green); color: #fff; border-color: var(--green); }
+.btn-red { background: var(--red); color: #fff; border-color: var(--red); }
+.btn-blue { background: var(--blue); color: #fff; border-color: var(--blue); }
+.btn-gold { background: var(--gold); color: #fff; border-color: var(--gold); }
+
+select, input[type="text"], input[type="number"] {
+  font-size: 13px; padding: 7px 12px; border: 0.5px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--card); color: var(--gray-800); font-family: inherit; outline: none;
+}
+select:focus, input:focus { border-color: var(--myth-red); }
+
+.flex-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.gap-sm { gap: 6px; }
+.gap-md { gap: 12px; }
+.mt-sm { margin-top: 8px; }
+.mt-md { margin-top: 14px; }
+.mb-sm { margin-bottom: 8px; }
+.mb-md { margin-bottom: 14px; }
+.text-sm { font-size: 12px; }
+.text-xs { font-size: 10px; }
+.text-muted { color: var(--gray-500); }
+.text-center { text-align: center; }
+
+.lock-btn { background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.2); font-size: 12px; padding: 6px 14px; border-radius: 20px; font-weight: 500; transition: all 0.2s; }
+.lock-btn:hover { background: rgba(255,255,255,0.2); }
+.lock-btn.unlocked { background: rgba(255,200,50,0.25); border-color: rgba(255,200,50,0.5); color: #FFD666; }
+.lock-hint { text-align: center; padding: 10px 16px; background: #FFF8EC; border: 1px solid #F0DCA0; border-radius: var(--radius); margin-bottom: 16px; font-size: 13px; color: var(--gold-dark); display: none; }
+.lock-hint.show { display: block; }
+.panel.locked .btn-primary, .panel.locked .btn-red, .panel.locked .btn-blue,
+.panel.locked button[onclick*="momAward"], .panel.locked button[onclick*="openBlindbox"],
+.panel.locked button[onclick*="buyAcc"], .panel.locked button[onclick*="equipAcc"],
+.panel.locked button[onclick*="unequipAcc"], .panel.locked button[onclick*="exchangeScreen"],
+.panel.locked button[onclick*="exchangeWeekend"], .panel.locked button[onclick*="logScreen"],
+.panel.locked button[onclick*="interactHero"], .panel.locked button[onclick*="releaseHero"],
+.panel.locked button[onclick*="startRename"], .panel.locked button[onclick*="exportData"],
+.panel.locked button[onclick*="importData"], .panel.locked button[onclick*="resetAll"],
+.panel.locked button[onclick*="openPinSettings"] { opacity: 0.4; pointer-events: none; }
+
+.pin-input { font-size: 24px; text-align: center; width: 160px; padding: 10px; border: 2px solid var(--border); border-radius: var(--radius-sm); letter-spacing: 8px; font-family: monospace; }
+.pin-input:focus { border-color: var(--myth-red); outline: none; }
+.pin-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+.pin-row label { font-size: 14px; min-width: 80px; color: var(--gray-600); }
+
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); padding: 10px 24px; border-radius: 20px; font-size: 13px; font-weight: 500; z-index: 200; animation: toastIn 0.3s ease; }
+.toast.success { background: var(--green); color: #fff; }
+.toast.error { background: var(--red); color: #fff; }
+.toast.info { background: var(--blue); color: #fff; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+.kid-panel-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-radius: var(--radius); margin-bottom: 14px; }
+.kid-panel-header.brother { background: linear-gradient(135deg, #E8F4FD, #DBEAFE); border: 1px solid var(--blue); }
+.kid-panel-header.little-bro { background: linear-gradient(135deg, #FFF7ED, #FEF3C7); border: 1px solid var(--amber); }
+.kid-panel-header .kid-emoji { font-size: 36px; }
+.kid-panel-header .kid-info { flex: 1; }
+.kid-panel-header .kid-name { font-size: 18px; font-weight: 600; }
+.kid-panel-header .kid-detail { font-size: 12px; color: var(--gray-500); }
+.points-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--gold-bg); color: var(--gold-dark); font-weight: 600; font-size: 16px; padding: 6px 14px; border-radius: 20px; border: 1px solid var(--gold); }
+
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { font-size: 11px; font-weight: 500; text-align: left; padding: 8px 12px; color: var(--gray-500); border-bottom: 1px solid var(--border); background: var(--gray-50); }
+td { padding: 8px 12px; border-bottom: 0.5px solid var(--border); }
+
+.action-btn { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 10px 16px; border-radius: var(--radius-sm); border: 0.5px solid var(--border); background: var(--card); }
+.action-btn .cost { font-size: 11px; color: var(--gray-500); margin-left: auto; }
+
+/* 交互动画 */
+#heroAnimTarget .hero-icon-inner { transition: transform 0.15s ease; font-size: 48px; display: inline-block; }
+#heroAnimTarget .hero-icon-inner img { width: 120px; height: 120px; object-fit: contain; vertical-align: middle; }
+#heroAnimTarget.anim-feed .hero-icon-inner { animation: heroBounce 0.5s ease; }
+#heroAnimTarget.anim-play .hero-icon-inner { animation: heroWiggle 0.5s ease; }
+#heroAnimTarget.anim-clean .hero-icon-inner { animation: heroShake 0.4s ease; }
+#heroAnimTarget.anim-heal .hero-icon-inner { animation: heroPulse 0.6s ease; }
+@keyframes heroBounce { 0%,100%{transform:translateY(0)}20%{transform:translateY(-12px)}40%{transform:translateY(0)}60%{transform:translateY(-6px)}80%{transform:translateY(0)} }
+@keyframes heroWiggle { 0%,100%{transform:rotate(0)translateX(0)}15%{transform:rotate(-8deg)translateX(-4px)}35%{transform:rotate(8deg)translateX(4px)}55%{transform:rotate(-6deg)translateX(-2px)}75%{transform:rotate(6deg)translateX(2px)} }
+@keyframes heroShake { 0%,100%{transform:translateX(0)}10%{transform:translateX(-6px)}20%{transform:translateX(6px)}30%{transform:translateX(-5px)}40%{transform:translateX(5px)}50%{transform:translateX(-3px)}60%{transform:translateX(3px)}70%{transform:translateX(-2px)}80%{transform:translateX(2px)} }
+@keyframes heroPulse { 0%,100%{transform:scale(1);filter:brightness(1)}30%{transform:scale(1.2);filter:brightness(1.4)}60%{transform:scale(0.95);filter:brightness(1.1)} }
+
+.empty-state { text-align: center; padding: 40px 20px; color: var(--gray-400); }
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 10px; }
+.empty-state p { font-size: 13px; }
+
+@media (max-width: 640px) {
+  .app { padding: 10px; }
+  .grid-3, .grid-4 { grid-template-columns: 1fr 1fr; }
+  .kid-switch { flex-direction: column; }
+  .header { flex-direction: column; gap: 8px; text-align: center; }
+  .task-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+<div class="header">
+  <div class="header-left">
+    <h1>🏯 家庭英雄联盟</h1>
+    <span class="sub">Wilson & Leo · 神话英雄收集</span>
+  </div>
+  <div class="header-actions">
+    <button class="sync-badge-fh sync-local" id="syncStatusFH" onclick="cloudPull()" title="点击手动同步">💻 本地</button>
+    <button class="lock-btn" id="lockBtn" onclick="toggleLock()">🔒 家长解锁</button>
+    <button onclick="toggleRules()">📋 积分规则</button>
+  </div>
+</div>
+
+<div class="lock-hint" id="lockHint">🔒 已锁定 · 点击右上角「家长解锁」输入 PIN 码激活家长操作</div>
+
+<div class="kid-switch" id="kidSwitch">
+  <button class="kid-btn active" data-kid="0" id="kidBtn0">
+    👦 Leo
+    <span class="kid-points" id="kidPoints0">积分：0</span>
+  </button>
+  <button class="kid-btn" data-kid="1" id="kidBtn1">
+    👦 Wilson
+    <span class="kid-points" id="kidPoints1">积分：0</span>
+  </button>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab-btn active" data-tab="0">🏯 我的英雄</button>
+  <button class="tab-btn" data-tab="1">⭐ 积分中心</button>
+  <button class="tab-btn" data-tab="2">🎁 英雄商店</button>
+  <button class="tab-btn" data-tab="3">💎 法宝商店</button>
+  <button class="tab-btn" data-tab="4">📱 屏幕管理</button>
+  <button class="tab-btn" data-tab="5">⚙ 设置</button>
+</div>
+
+<div class="panel active" id="panel-0">
+  <div id="myHeroesContent"></div>
+</div>
+
+<div class="panel" id="panel-1">
+  <div class="card">
+    <div class="card-header">⭐ 妈妈直接奖励</div>
+    <p class="text-sm text-muted mb-md">当前操作：<strong id="pointsTargetName"></strong></p>
+    <div class="flex-row gap-md mb-md">
+      <select id="awardDimension">
+        <option value="">选择维度</option>
+        <option value="study">📖 自主学习 +3~5</option>
+        <option value="chore">🧹 生活担当 +2~5</option>
+        <option value="sport">🏃 运动体能 +3~5</option>
+        <option value="selfctrl">🧠 自控成长 +3~10</option>
+        <option value="brother">👬 兄弟协作 +3~5</option>
+      </select>
+      <select id="awardPoints"><option value="">分值</option></select>
+      <input type="text" id="awardNote" placeholder="备注（可选）" style="width:140px">
+      <button class="btn btn-primary" id="btnAward" onclick="momAward()">确认加分</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">📊 积分明细</div>
+    <div id="pointsHistory"></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-2">
+  <div class="card">
+    <div class="card-header">🎁 英雄商店 · 盲盒抽英雄</div>
+    <p class="text-sm text-muted mb-md">当前操作：<strong id="shopTargetName"></strong></p>
+    <div class="grid-3" id="blindboxGrid"></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-3">
+  <div class="card">
+    <div class="card-header">💎 法宝商店 · 装饰英雄</div>
+    <p class="text-sm text-muted mb-md">当前操作：<strong id="accTargetName"></strong></p>
+    <div class="flex-row gap-md mb-md">
+      <select id="accHero"><option value="">选择英雄</option></select>
+    </div>
+    <div id="accessoryShop"></div>
+  </div>
+</div>
+
+<div class="panel" id="panel-4">
+  <div id="screenPanel"></div>
+</div>
+
+<div class="panel" id="panel-5">
+  <div class="card">
+    <div class="card-header">⚙ 系统设置</div>
+    <div class="flex-row gap-md mb-md">
+      <button class="btn btn-blue" onclick="exportData()">导出数据备份</button>
+      <button class="btn" onclick="document.getElementById('importFile').click()">导入数据恢复</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn btn-red btn-sm" onclick="resetAll()">重置全部数据</button>
+      <button class="btn btn-sm" onclick="openPinSettings()">🔑 修改 PIN</button>
+    </div>
+    <p class="text-xs text-muted mt-md">建议每周导出一次备份。重置将清除所有数据。</p>
+  </div>
+</div>
+
+</div>
+
+<div class="modal-overlay" id="heroDetailModal">
+  <div class="modal" style="max-width:560px">
+    <div id="heroDetailContent"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeHeroDetail()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="blindboxResultModal">
+  <div class="modal" style="max-width:400px;text-align:center">
+    <div id="blindboxResult"></div>
+    <div class="modal-actions" style="justify-content:center">
+      <button class="btn btn-primary" onclick="closeBlindboxResult()">太棒了！</button>
+    </div>
+  </div>
+</div>
+
+  <div class="modal-overlay" id="rulesModal">
+    <div class="modal" style="max-width:640px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0">
+      <h3 style="margin-bottom:0">📋 家庭英雄联盟 · 积分规则</h3>
+      <button class="btn btn-sm" onclick="toggleRules()" style="font-size:16px;padding:4px 8px;line-height:1">✕</button>
+    </div>
+    </div>
+  </div>
+
+<div class="modal-overlay" id="pinModal" style="display:none">
+  <div class="modal" style="max-width:400px;text-align:center">
+    <h3 style="margin-bottom:16px">🔒 家长验证</h3>
+    <p class="text-sm text-muted mb-md">请输入 PIN 码解锁操作权限</p>
+    <input type="password" class="pin-input" id="pinInput" maxlength="6" placeholder="····" onkeydown="if(event.key==='Enter')verifyPin()">
+    <p class="text-xs text-danger" id="pinError" style="display:none;margin-top:8px"></p>
+    <div class="modal-actions" style="justify-content:center;margin-top:16px">
+      <button class="btn" onclick="closePinModal()">取消</button>
+      <button class="btn btn-primary" onclick="verifyPin()">确认解锁</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pinSettingsModal" style="display:none">
+  <div class="modal" style="max-width:420px">
+    <h3 style="margin-bottom:16px">🔑 修改 PIN 码</h3>
+    <div class="pin-row">
+      <label>当前 PIN</label>
+      <input type="password" id="oldPin" maxlength="6" class="pin-input" style="font-size:16px;width:120px;letter-spacing:4px">
+    </div>
+    <div class="pin-row">
+      <label>新 PIN</label>
+      <input type="password" id="newPin" maxlength="6" class="pin-input" style="font-size:16px;width:120px;letter-spacing:4px">
+    </div>
+    <div class="pin-row">
+      <label>确认新 PIN</label>
+      <input type="password" id="confirmPin" maxlength="6" class="pin-input" style="font-size:16px;width:120px;letter-spacing:4px">
+    </div>
+    <p class="text-xs text-danger" id="pinChangeError" style="display:none;margin-top:4px"></p>
+    <div class="modal-actions" style="margin-top:16px">
+      <button class="btn" onclick="closePinSettings()">取消</button>
+      <button class="btn btn-primary" onclick="changePin()">确认修改</button>
+    </div>
+  </div>
+</div>
+    <div style="margin-top:16px">
+      <h4 style="font-size:14px;font-weight:500;margin-bottom:8px">🎯 五大积分维度</h4>
+      <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:16px">
+        <tr><th style="padding:6px 8px;text-align:left">维度</th><th style="padding:6px 8px;text-align:left">分值</th><th style="padding:6px 8px;text-align:left">示例</th></tr>
+        <tr><td>📖 自主学习</td><td>+3~5</td><td>自主阅读30分钟、完成作业、练字/口算、阅读分享</td></tr>
+        <tr><td>🧹 生活担当</td><td>+2~5</td><td>整理书桌、摆收碗筷、倒垃圾、叠衣服、帮忙做饭<br><em>主动做（未要求）×1.5</em></td></tr>
+        <tr><td>🏃 运动体能</td><td>+3~5</td><td>户外运动30分钟、专项运动（球/泳/跳绳）</td></tr>
+        <tr><td>🧠 自控成长</td><td>+3~10</td><td>主动关屏、未兑换额外时间、替代活动、Screen-Free Day</td></tr>
+        <tr><td>👬 兄弟协作</td><td>+3~5</td><td>Leo 带 Wilson 阅读/学习、合作家务、分享谦让</td></tr>
+      </table>
+      <h4 style="font-size:14px;font-weight:500;margin-bottom:8px">📱 屏幕时间管理</h4>
+      <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:16px">
+        <tr><th style="padding:6px 8px;text-align:left">项目</th><th style="padding:6px 8px;text-align:left">说明</th></tr>
+        <tr><td>基础配额</td><td>每人每天 30 分钟，不累积</td></tr>
+        <tr><td>积分兑换</td><td>30 分换 15 分钟，每天限 1 次</td></tr>
+        <tr><td>周末自由日</td><td>100 分换 2 小时，每周限 1 次，周五前兑换</td></tr>
+        <tr><td>超时扣分</td><td>每超 5 分钟 -3 分</td></tr>
+        <tr><td>连续超时 3 天</td><td>次日兑换功能冻结</td></tr>
+        <tr><td>连续 7 天零超时</td><td>额外奖励 +20 分</td></tr>
+      </table>
+      <h4 style="font-size:14px;font-weight:500;margin-bottom:8px">📉 屏幕降级计划</h4>
+      <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:16px">
+        <tr><th style="padding:6px 8px;text-align:left">阶段</th><th style="padding:6px 8px;text-align:left">基础配额</th><th style="padding:6px 8px;text-align:left">触发条件</th><th style="padding:6px 8px;text-align:left">奖励</th></tr>
+        <tr><td>第1-2周</td><td>30 min</td><td>初始</td><td>—</td></tr>
+        <tr><td>第3-4周</td><td>25 min</td><td>前两周未超时</td><td>+20 分</td></tr>
+        <tr><td>第5-8周</td><td>20 min</td><td>连续4周未超时</td><td>稀有英雄 ×1</td></tr>
+        <tr><td>第9周+</td><td>15 min</td><td>长期稳定</td><td>传说英雄 ×1</td></tr>
+      </table>
+      <h4 style="font-size:14px;font-weight:500;margin-bottom:8px">💰 积分消费</h4>
+      <table style="width:100%;font-size:12px;border-collapse:collapse;margin-bottom:16px">
+        <tr><th style="padding:6px 8px;text-align:left">项目</th><th style="padding:6px 8px;text-align:left">费用</th><th style="padding:6px 8px;text-align:left">说明</th></tr>
+        <tr><td>普通盲盒</td><td>50 分</td><td>70%普通 / 25%稀有 / 5%史诗</td></tr>
+        <tr><td>稀有盲盒</td><td>150 分</td><td>50%稀有 / 40%史诗 / 10%传说</td></tr>
+        <tr><td>传说盲盒</td><td>300 分</td><td>60%史诗 / 40%传说</td></tr>
+        <tr><td>法宝（普通→传说）</td><td>10/30/80/200 分</td><td>已购买可随时换装</td></tr>
+        <tr><td>英雄槽位扩展</td><td>第3槽100分/第4槽200分</td><td>默认2个</td></tr>
+        <tr><td>交互（喂食/修炼/清洁）</td><td>3 分/次</td><td>提升属性</td></tr>
+        <tr><td>治疗</td><td>5 分/次</td><td>恢复健康值</td></tr>
+        <tr><td>兑换屏幕 15min</td><td>30 分</td><td>日限1次</td></tr>
+        <tr><td>周末自由日 2h</td><td>100 分</td><td>周限1次</td></tr>
+      </table>
+      <h4 style="font-size:14px;font-weight:500;margin-bottom:8px">📝 验收标准差异（妈妈掌握）</h4>
+      <p class="text-sm text-muted">同样任务积分统一，但验收标准因年龄而异。Leo（四年级）需更高完成度，Wilson（一年级）鼓励参与为主。主动做家务 ×1.5 倍。</p>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<script>
+// ========== 数据定义 ==========
+
+const HERO_POOL = {
+  common: [
+    { name: '巡海夜叉', icon: '👹', imgKey: 'yecha', evoStages: ['巡海夜叉', '深海夜叉'] },
+    { name: '小妖怪', icon: '👾', imgKey: 'yaoguai', evoStages: ['小妖怪', '妖怪头目'] },
+    { name: '结界兽', icon: '🗿', imgKey: 'jiejie', evoStages: ['结界兽', '守护兽'] },
+  ],
+  rare: [
+    { name: '太乙真人', icon: '🍑', imgKey: 'taiyi', evoStages: ['太乙真人', '金光洞主', '乾元山仙尊'] },
+    { name: '敖丙', icon: '🐉', imgKey: 'aobing', evoStages: ['龙宫太子', '冰龙形态', '真龙敖丙'] },
+    { name: '申公豹', icon: '🐆', imgKey: 'shengongbao', evoStages: ['申公豹', '黑豹真君'] },
+  ],
+  epic: [
+    { name: '殷夫人', icon: '⚔️', imgKey: 'yinfuren', evoStages: ['殷夫人', '巾帼将军'] },
+    { name: '李靖', icon: '🏛️', imgKey: 'lijing', evoStages: ['李靖', '托塔天王'] },
+    { name: '雷震子', icon: '⚡', imgKey: 'leizhenzi', evoStages: ['雷震子', '风雷战神'] },
+  ],
+  legendary: [
+    { name: '哪吒', icon: '🔥', imgKey: 'nezha', evoStages: ['凡身哪吒', '三头六臂', '莲花化身'] },
+    { name: '孙悟空', icon: '🐵', imgKey: 'wukong', evoStages: ['石猴悟空', '齐天大圣', '斗战胜佛'] },
+  ]
+};
+
+function getHeroImg(imgKey, evolution) {
+  if (!imgKey) return null;
+  return 'hero-images/' + imgKey + '-' + (evolution || 1) + '.png';
+}
+
+const ACCESSORIES = {
+  head: [
+    { name: '乾坤圈', rarity: 'common', icon: '⭕', price: 10 },
+    { name: '凤翅紫金冠', rarity: 'rare', icon: '👑', price: 30 },
+    { name: '莲花冠', rarity: 'epic', icon: '🪷', price: 80 },
+    { name: '三昧真火冠', rarity: 'legendary', icon: '🔥', price: 200 },
+  ],
+  neck: [
+    { name: '混天绫', rarity: 'common', icon: '🔴', price: 10 },
+    { name: '定海珠', rarity: 'rare', icon: '💎', price: 30 },
+    { name: '龙鳞项链', rarity: 'epic', icon: '🐉', price: 80 },
+    { name: '金刚琢', rarity: 'legendary', icon: '✨', price: 200 },
+  ],
+  back: [
+    { name: '风火轮', rarity: 'common', icon: '🔥', price: 10 },
+    { name: '筋斗云', rarity: 'rare', icon: '☁️', price: 30 },
+    { name: '火尖枪', rarity: 'epic', icon: '🔱', price: 80 },
+    { name: '如意金箍棒', rarity: 'legendary', icon: '🏮', price: 200 },
+  ]
+};
+
+const DIM_LABELS = {
+  study: '📖 自主学习', chore: '🧹 生活担当', sport: '🏃 运动体能',
+  selfctrl: '🧠 自控成长', brother: '👬 兄弟协作'
+};
+const DIM_POINTS = {
+  study: [3, 4, 5], chore: [2, 3, 4, 5], sport: [3, 4, 5],
+  selfctrl: [3, 5, 8, 10], brother: [3, 4, 5]
+};
+
+const BOX_TYPES = [
+  { name: '普通召唤', icon: '📦', price: 50, odds: { common: 70, rare: 25, epic: 5, legendary: 0 }, color: 'var(--gray-50)' },
+  { name: '稀有召唤', icon: '🎁', price: 150, odds: { common: 0, rare: 50, epic: 40, legendary: 10 }, color: 'var(--blue-bg)' },
+  { name: '传说召唤', icon: '✨', price: 300, odds: { common: 0, rare: 0, epic: 60, legendary: 40 }, color: 'var(--gold-bg)' },
+];
+
+const RARITY_COLORS = {
+  common: { bg: 'var(--gray-50)', color: 'var(--gray-600)', label: '普通' },
+  rare: { bg: 'var(--blue-bg)', color: 'var(--blue-dark)', label: '稀有' },
+  epic: { bg: 'var(--purple-bg)', color: 'var(--purple-dark)', label: '史诗' },
+  legendary: { bg: 'var(--gold-bg)', color: 'var(--gold-dark)', label: '传说' }
+};
+
+const SCREEN_PHASES = [
+  { quota: 30, weeks: 2, reward: null, rewardLabel: '' },
+  { quota: 25, weeks: 2, reward: { type: 'points', amount: 20 }, rewardLabel: '+20 分' },
+  { quota: 20, weeks: 4, reward: { type: 'hero', rarity: 'rare' }, rewardLabel: '稀有英雄 ×1' },
+  { quota: 15, weeks: 999, reward: { type: 'hero', rarity: 'legendary' }, rewardLabel: '传说英雄 ×1' },
+];
+
+function genId() { return 'id_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7); }
+
+function getDefaultData() {
+  const kids = [
+    { id: 'k0', name: 'Leo', grade: 4, points: 0, slots: 2, extraSlots: 0,
+      heroes: [], ownedAccessories: [], pointLogs: [],
+      screenQuota: 30, screenMinutesToday: 0, screenDate: '',
+      screenStreak: 0, screenOvertimeDays: 0,
+      screenExchangesToday: 0, screenExchangeDate: '',
+      screenWeekendUsed: false, screenWeekendDate: '',
+      screenPhase: 0, screenPhaseWeeks: 0, screenPhaseStartDate: '',
+    },
+    { id: 'k1', name: 'Wilson', grade: 1, points: 0, slots: 2, extraSlots: 0,
+      heroes: [], ownedAccessories: [], pointLogs: [],
+      screenQuota: 30, screenMinutesToday: 0, screenDate: '',
+      screenStreak: 0, screenOvertimeDays: 0,
+      screenExchangesToday: 0, screenExchangeDate: '',
+      screenWeekendUsed: false, screenWeekendDate: '',
+      screenPhase: 0, screenPhaseWeeks: 0, screenPhaseStartDate: '',
+    }
+  ];
+  return { version: 2, kids, lastMaintenanceDate: '', startDate: new Date().toISOString().slice(0, 10) };
+}
+
+let DATA = getDefaultData();
+let CURRENT_KID = 0;
+let PIN_LOCKED = true;
+let PARENT_PIN = '1001';
+let lockTimer = null;
+
+// ========== 云端同步 ==========
+const CLOUD_API_BASE_FH = 'https://api.jsonblob.com/';
+const CLOUD_DEFAULT_BLOB_FH = '019ef1db-c98b-77be-920b-6cd60b5ccdfe';
+let CLOUD_BLOB_ID_FH = localStorage.getItem('cloud_blob_id_fh') || CLOUD_DEFAULT_BLOB_FH;
+let CLOUD_URL_FH = CLOUD_API_BASE_FH + CLOUD_BLOB_ID_FH;
+
+function setCloudBlobIdFH(id) {
+  CLOUD_BLOB_ID_FH = id;
+  CLOUD_URL_FH = CLOUD_API_BASE_FH + id;
+  localStorage.setItem('cloud_blob_id_fh', id);
+  console.log('☁️ 云端 Blob 已更新:', id);
+}
+
+async function createCloudBlobFH(initialData) {
+  try {
+    const resp = await fetch(CLOUD_API_BASE_FH, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(initialData || { version: 2, _lastModified: 0 })
+    });
+    if (!resp.ok) throw new Error('创建 Blob 失败: ' + resp.status);
+    const newId = resp.headers.get('Location')?.split('/').pop()
+      || resp.headers.get('X-jsonblob-id');
+    if (newId) {
+      setCloudBlobIdFH(newId);
+      return newId;
+    }
+    throw new Error('无法获取新 Blob ID');
+  } catch (e) {
+    console.error('☁️ 创建云端 Blob 失败:', e.message);
+    return null;
+  }
+}
+let SYNC_STATUS_FH = 'local'; // local | syncing | synced | error
+let syncTimerFH = null;
+let lastCloudFetchFH = 0;
+let lastLocalChangeTimeFH = 0;
+
+function updateSyncUIFH() {
+  const badge = document.getElementById('syncStatusFH');
+  if (!badge) return;
+  const map = {
+    local:  ['sync-local','💻 本地'],
+    syncing:['sync-syncing','☁️ 同步中'],
+    synced: ['sync-synced','✅ 已同步'],
+    error:  ['sync-error','⚠️ 同步失败']
+  };
+  const [cls, txt] = map[SYNC_STATUS_FH] || map.local;
+  badge.className = 'sync-badge-fh ' + cls;
+  badge.innerHTML = txt;
+}
+
+function debouncedCloudPushFH() {
+  if (syncTimerFH) clearTimeout(syncTimerFH);
+  syncTimerFH = setTimeout(() => { cloudPush(); }, 800);
+}
+
+async function cloudPush() {
+  SYNC_STATUS_FH = 'syncing';
+  updateSyncUIFH();
+  try {
+    DATA._lastModified = Date.now();
+    localStorage.setItem('family_hero_system', JSON.stringify(DATA));
+    const resp = await fetch(CLOUD_URL_FH, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(DATA)
+    });
+    if (resp.status === 404) {
+      // Blob 过期/被删，自动创建新 Blob 并重试
+      console.warn('☁️ 云端 Blob 已过期，自动重建...');
+      const newId = await createCloudBlobFH(DATA);
+      if (newId) {
+        const retry = await fetch(CLOUD_URL_FH, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(DATA)
+        });
+        if (retry.ok) {
+          SYNC_STATUS_FH = 'synced';
+        } else {
+          SYNC_STATUS_FH = 'error';
+        }
+      } else {
+        SYNC_STATUS_FH = 'error';
+      }
+    } else if (resp.ok) {
+      // Verify data was actually persisted
+      const verify = await resp.json();
+      if (verify._lastModified === DATA._lastModified) {
+        SYNC_STATUS_FH = 'synced';
+      } else {
+        SYNC_STATUS_FH = 'error';
+      }
+    } else {
+      SYNC_STATUS_FH = 'error';
+    }
+  } catch(e) {
+    console.warn('☁️ 云端保存失败，数据已存本地:', e.message);
+    SYNC_STATUS_FH = 'error';
+  }
+  updateSyncUIFH();
+}
+
+async function cloudPull() {
+  if (Date.now() - lastCloudFetchFH < 10000) return;
+  lastCloudFetchFH = Date.now();
+  try {
+    const resp = await fetch(CLOUD_URL_FH);
+    if (resp.status === 404) {
+      // Blob expired, create new one and push local data as seed
+      console.warn('☁️ 云端 Blob 已过期，重建并上传本地数据...');
+      const newId = await createCloudBlobFH(DATA);
+      if (newId) {
+        const pushResp = await fetch(CLOUD_URL_FH, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...DATA, _lastModified: Date.now() })
+        });
+        if (pushResp.ok) {
+          SYNC_STATUS_FH = 'synced';
+          updateSyncUIFH();
+          showToast('✅ 云端已重建并同步', 'success');
+        }
+      }
+      return false;
+    }
+    if (!resp.ok) return;
+    const cloud = await resp.json();
+    if (!cloud || cloud.version !== DATA.version) return;
+    const cloudTime = cloud._lastModified || 0;
+    const localTime = DATA._lastModified || 0;
+    const isFreshLocal = !DATA._lastModified;
+    if (isFreshLocal || cloudTime > localTime + 2000) {
+      if (lastLocalChangeTimeFH > 0 && (Date.now() - lastLocalChangeTimeFH < 10000)) {
+        console.log('☁️ 有本地未同步修改，跳过云端拉取');
+        return false;
+      }
+      console.log('☁️ 检测到云端新数据，正在同步...');
+      DATA = { ...getDefaultData(), ...cloud };
+      DATA.kids = DATA.kids.map(k => ({
+        ...getDefaultData().kids[0], ...k,
+        heroes: (k.heroes || []).map(h => ({
+          id: h.id || genId(), name: h.name || '未命名', icon: h.icon || '❓',
+          imgKey: h.imgKey || null,
+          rarity: h.rarity || 'common', evolution: h.evolution || 1,
+          evoStages: h.evoStages || ['未命名'],
+          hunger: h.hunger ?? 80, energy: h.energy ?? 80,
+          morale: h.morale ?? 80, health: h.health ?? 90,
+          accessories: h.accessories || { head: null, neck: null, back: null },
+        })),
+      }));
+      if (!DATA.kids[0].screenPhaseStartDate) { DATA.kids[0].screenPhaseStartDate = DATA.startDate; }
+      if (!DATA.kids[1].screenPhaseStartDate) { DATA.kids[1].screenPhaseStartDate = DATA.startDate; }
+      localStorage.setItem('family_hero_system', JSON.stringify(DATA));
+      SYNC_STATUS_FH = 'synced';
+      updateSyncUIFH();
+      renderAll();
+      showToast('✅ 已从云端同步最新数据', 'success');
+      return true;
+    }
+  } catch(e) {
+    console.warn('☁️ 云端读取失败:', e.message);
+  }
+  return false;
+}
+
+// 页面关闭前强制同步到云端
+window.addEventListener('beforeunload', function() {
+  if (syncTimerFH) { clearTimeout(syncTimerFH); syncTimerFH = null; }
+  DATA._lastModified = Date.now();
+  localStorage.setItem('family_hero_system', JSON.stringify(DATA));
+  try {
+    fetch(CLOUD_URL_FH, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(DATA),
+      keepalive: true
+    });
+  } catch(e) {}
+});
+
+// 切到后台时触发同步
+document.addEventListener('visibilitychange', function() {
+  if (document.hidden && SYNC_STATUS_FH !== 'local') {
+    if (syncTimerFH) { clearTimeout(syncTimerFH); syncTimerFH = null; }
+    cloudPush();
+  }
+});
+
+// ========== PIN 锁 ==========
+
+function toggleLock() {
+  if (!PIN_LOCKED) { lockSystem(); return; }
+  document.getElementById('pinModal').style.display = 'flex';
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinError').style.display = 'none';
+  setTimeout(() => document.getElementById('pinInput').focus(), 100);
+}
+
+function verifyPin() {
+  const input = document.getElementById('pinInput').value;
+  if (input === PARENT_PIN) {
+    PIN_LOCKED = false;
+    document.getElementById('pinModal').style.display = 'none';
+    document.getElementById('pinError').style.display = 'none';
+    updateLockUI();
+    resetLockTimer();
+    renderAll();
+    showToast('已解锁 · 5 分钟不操作自动锁定', 'success');
+  } else {
+    document.getElementById('pinError').textContent = 'PIN 码错误，请重试';
+    document.getElementById('pinError').style.display = 'block';
+    document.getElementById('pinInput').value = '';
+    document.getElementById('pinInput').focus();
+  }
+}
+
+function closePinModal() {
+  document.getElementById('pinModal').style.display = 'none';
+  document.getElementById('pinError').style.display = 'none';
+}
+
+function lockSystem() {
+  PIN_LOCKED = true;
+  if (lockTimer) { clearTimeout(lockTimer); lockTimer = null; }
+  updateLockUI();
+  renderAll();
+  showToast('已锁定', 'info');
+}
+
+function resetLockTimer() {
+  if (lockTimer) clearTimeout(lockTimer);
+  lockTimer = setTimeout(() => { lockSystem(); }, 5 * 60 * 1000);
+}
+
+function updateLockUI() {
+  const btn = document.getElementById('lockBtn');
+  const hint = document.getElementById('lockHint');
+  if (PIN_LOCKED) {
+    btn.textContent = '🔒 家长解锁';
+    btn.className = 'lock-btn';
+    hint.classList.add('show');
+  } else {
+    btn.textContent = '🔓 已解锁';
+    btn.className = 'lock-btn unlocked';
+    hint.classList.remove('show');
+  }
+}
+
+function requireUnlock() {
+  if (PIN_LOCKED) {
+    showToast('请先解锁', 'error');
+    toggleLock();
+    return false;
+  }
+  resetLockTimer();
+  return true;
+}
+
+// ========== PIN 设置 ==========
+
+function openPinSettings() {
+  if (!requireUnlock()) return;
+  document.getElementById('pinSettingsModal').style.display = 'flex';
+  document.getElementById('oldPin').value = '';
+  document.getElementById('newPin').value = '';
+  document.getElementById('confirmPin').value = '';
+  document.getElementById('pinChangeError').style.display = 'none';
+}
+
+function closePinSettings() {
+  document.getElementById('pinSettingsModal').style.display = 'none';
+}
+
+function changePin() {
+  const oldP = document.getElementById('oldPin').value;
+  const newP = document.getElementById('newPin').value;
+  const confirmP = document.getElementById('confirmPin').value;
+  const errEl = document.getElementById('pinChangeError');
+  if (oldP !== PARENT_PIN) { errEl.textContent = '当前 PIN 码错误'; errEl.style.display = 'block'; return; }
+  if (newP.length < 4) { errEl.textContent = '新 PIN 至少 4 位'; errEl.style.display = 'block'; return; }
+  if (newP !== confirmP) { errEl.textContent = '两次输入不一致'; errEl.style.display = 'block'; return; }
+  PARENT_PIN = newP;
+  document.getElementById('pinSettingsModal').style.display = 'none';
+  showToast('PIN 码修改成功！', 'success');
+}
+
+// ========== 数据持久化 ==========
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem('family_hero_system');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed.version !== getDefaultData().version) {
+        localStorage.removeItem('family_hero_system');
+        DATA = getDefaultData();
+        saveData();
+      } else {
+        DATA = { ...getDefaultData(), ...parsed };
+        DATA.kids = DATA.kids.map(k => ({
+          ...getDefaultData().kids[0], ...k,
+          heroes: (k.heroes || []).map(h => ({
+            id: h.id || genId(), name: h.name || '未命名', icon: h.icon || '❓',
+            imgKey: h.imgKey || null,
+            rarity: h.rarity || 'common', evolution: h.evolution || 1,
+            evoStages: h.evoStages || ['未命名'],
+            hunger: h.hunger ?? 80, energy: h.energy ?? 80,
+            morale: h.morale ?? 80, health: h.health ?? 90,
+            accessories: h.accessories || { head: null, neck: null, back: null },
+          })),
+        }));
+        if (!DATA.kids[0].screenPhaseStartDate) { DATA.kids[0].screenPhaseStartDate = DATA.startDate; }
+        if (!DATA.kids[1].screenPhaseStartDate) { DATA.kids[1].screenPhaseStartDate = DATA.startDate; }
+      }
+    }
+  } catch (e) { console.error('load error', e); }
+  // runMaintenance() 已移至 init()，在 cloudPull 之后执行
+}
+function saveData() {
+  localStorage.setItem('family_hero_system', JSON.stringify(DATA));
+  lastLocalChangeTimeFH = Date.now();
+  debouncedCloudPushFH();
+}
+
+function getKid(idx) { return DATA.kids[idx ?? CURRENT_KID]; }
+function currentKid() { return DATA.kids[CURRENT_KID]; }
+
+// ========== 每日维护 ==========
+
+function runMaintenance() {
+  const today = new Date().toISOString().slice(0, 10);
+  if (DATA.lastMaintenanceDate === today) return;
+  DATA.kids.forEach(k => {
+    k.heroes.forEach(h => {
+      h.hunger = Math.max(0, h.hunger - 3);
+      h.energy = Math.max(0, h.energy - 2);
+      h.morale = Math.max(0, h.morale - 2);
+      if (h.hunger < 20 || h.energy < 20 || h.morale < 20) {
+        h.health = Math.max(0, h.health - 5);
+      }
+    });
+    // 检查昨日屏幕超时
+    if (k.screenDate && k.screenDate !== today) {
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      if (k.screenDate === yesterday) {
+        if (k.screenMinutesToday > k.screenQuota) {
+          k.screenOvertimeDays++;
+          k.screenStreak = 0;
+          if (k.screenOvertimeDays >= 3) {
+            k.screenExchangeFrozen = true;
+          }
+        } else {
+          k.screenOvertimeDays = 0;
+          k.screenStreak++;
+          k.screenExchangeFrozen = false;
+          if (k.screenStreak >= 7 && k.screenStreak % 7 === 0) {
+            k.points += 20;
+            k.pointLogs.push({ time: Date.now(), dim: 'selfctrl', pts: 20, note: '连续7天零超时奖励' });
+          }
+          // 屏幕降级检查
+          const phase = SCREEN_PHASES[k.screenPhase];
+          if (phase && k.screenStreak >= phase.weeks * 7) {
+            advanceScreenPhase(k);
+          }
+        }
+      } else {
+        k.screenStreak = 0;
+        k.screenOvertimeDays = 0;
+        k.screenExchangeFrozen = false;
+      }
+    }
+    k.screenMinutesToday = 0;
+    k.screenDate = today;
+    k.screenExchangesToday = 0;
+    k.screenExchangeDate = today;
+    // 重置周末自由日（周一重置）
+    const day = new Date().getDay();
+    if (day === 1) { k.screenWeekendUsed = false; }
+  });
+  DATA.lastMaintenanceDate = today;
+  saveData();
+}
+
+function advanceScreenPhase(k) {
+  const phase = SCREEN_PHASES[k.screenPhase];
+  if (k.screenPhase < SCREEN_PHASES.length - 1) {
+    k.screenPhase++;
+    k.screenPhaseWeeks = 0;
+    k.screenPhaseStartDate = new Date().toISOString().slice(0, 10);
+    k.screenStreak = 0;
+    const newPhase = SCREEN_PHASES[k.screenPhase];
+    k.screenQuota = newPhase.quota;
+    if (newPhase.reward) {
+      if (newPhase.reward.type === 'points') {
+        k.points += newPhase.reward.amount;
+        k.pointLogs.push({ time: Date.now(), dim: 'selfctrl', pts: newPhase.reward.amount, note: '屏幕降级奖励' });
+      } else if (newPhase.reward.type === 'hero') {
+        giveRewardHero(k, newPhase.reward.rarity);
+      }
+    }
+    saveData();
+  }
+}
+
+function giveRewardHero(k, rarity) {
+  let pool = [];
+  if (rarity === 'rare') {
+    pool = [...HERO_POOL.rare];
+  } else if (rarity === 'legendary') {
+    pool = [...HERO_POOL.legendary];
+  }
+  if (pool.length === 0) return;
+  const heroDef = pool[Math.floor(Math.random() * pool.length)];
+  const hero = {
+    id: genId(), name: heroDef.name, icon: heroDef.icon, imgKey: heroDef.imgKey,
+    rarity: rarity, evolution: 1, evoStages: heroDef.evoStages,
+    hunger: 80 + Math.floor(Math.random() * 20),
+    energy: 80 + Math.floor(Math.random() * 20),
+    morale: 80 + Math.floor(Math.random() * 20),
+    health: 90 + Math.floor(Math.random() * 10),
+    accessories: { head: null, neck: null, back: null },
+  };
+  k.heroes.push(hero);
+}
+
+// ========== 屏幕时间管理 ==========
+
+function logScreenTime(kidIdx, minutes) {
+  if (!requireUnlock()) return;
+  const k = DATA.kids[kidIdx];
+  k.screenMinutesToday += minutes;
+  const overtime = Math.max(0, k.screenMinutesToday - k.screenQuota);
+  if (overtime > 0) {
+    const penalty = Math.floor(overtime / 5) * 3;
+    k.points = Math.max(0, k.points - penalty);
+    k.pointLogs.push({ time: Date.now(), dim: 'selfctrl', pts: -penalty, note: `超时${overtime}分钟扣分` });
+  }
+  saveData();
+  renderAll();
+  if (overtime > 0) {
+    showToast(`超时 ${overtime} 分钟，扣除 ${penalty} 分`, 'error');
+  } else {
+    showToast(`已记录屏幕时间：${minutes} 分钟`, 'info');
+  }
+}
+
+function exchangeScreenTime(kidIdx) {
+  if (!requireUnlock()) return;
+  const k = DATA.kids[kidIdx];
+  if (k.screenExchangeFrozen) {
+    showToast('连续超时3天，兑换功能已冻结', 'error'); return;
+  }
+  if (k.screenExchangesToday >= 1) {
+    showToast('今天已兑换过，每天限1次', 'error'); return;
+  }
+  if (k.points < 30) {
+    showToast('积分不足（需要30分）', 'error'); return;
+  }
+  k.points -= 30;
+  k.screenQuota += 15;
+  k.screenExchangesToday++;
+  k.pointLogs.push({ time: Date.now(), dim: 'selfctrl', pts: -30, note: '兑换15分钟屏幕时间' });
+  saveData();
+  renderAll();
+  showToast('已兑换 15 分钟额外屏幕时间', 'success');
+}
+
+function exchangeWeekendFree(kidIdx) {
+  if (!requireUnlock()) return;
+  const k = DATA.kids[kidIdx];
+  if (k.screenWeekendUsed) {
+    showToast('本周已使用周末自由日', 'error'); return;
+  }
+  if (k.points < 100) {
+    showToast('积分不足（需要100分）', 'error'); return;
+  }
+  const day = new Date().getDay();
+  if (day > 5) {
+    showToast('周末自由日需在周五前兑换', 'error'); return;
+  }
+  k.points -= 100;
+  k.screenWeekendUsed = true;
+  k.screenWeekendDate = new Date().toISOString().slice(0, 10);
+  k.pointLogs.push({ time: Date.now(), dim: 'selfctrl', pts: -100, note: '兑换周末自由日2小时' });
+  saveData();
+  renderAll();
+  showToast('周末自由日已兑换！周六/周日可用 2 小时', 'success');
+}
+
+// ========== 英雄抽奖 ==========
+
+function randomPick(odds) {
+  const r = Math.random() * 100;
+  let cum = 0;
+  for (const [k, v] of Object.entries(odds)) {
+    cum += v;
+    if (r <= cum) return k;
+  }
+  return 'common';
+}
+
+function drawHero(boxType) {
+  const rarity = randomPick(boxType.odds);
+  let pool = HERO_POOL[rarity];
+  if (!pool || pool.length === 0) {
+    for (const r of ['epic', 'rare', 'common']) {
+      if (HERO_POOL[r] && HERO_POOL[r].length > 0) { pool = HERO_POOL[r]; break; }
+    }
+    if (!pool) pool = [{ name: '神秘英雄', icon: '❓', imgKey: null, evoStages: ['神秘英雄'] }];
+  }
+  const def = pool[Math.floor(Math.random() * pool.length)];
+  return {
+    id: genId(), name: def.name, icon: def.icon, imgKey: def.imgKey, rarity,
+    evolution: 1, evoStages: def.evoStages,
+    hunger: 80 + Math.floor(Math.random() * 20),
+    energy: 80 + Math.floor(Math.random() * 20),
+    morale: 80 + Math.floor(Math.random() * 20),
+    health: 90 + Math.floor(Math.random() * 10),
+    accessories: { head: null, neck: null, back: null },
+  };
+}
+
+// ========== 妈妈奖励 ==========
+
+function momAward() {
+  if (!requireUnlock()) return;
+  const k = currentKid();
+  const dim = document.getElementById('awardDimension').value;
+  const pts = parseInt(document.getElementById('awardPoints').value);
+  const note = document.getElementById('awardNote').value.trim();
+  if (!dim || isNaN(pts)) { showToast('请选择维度和分值', 'error'); return; }
+  k.points += pts;
+  k.pointLogs.push({ time: Date.now(), dim, pts, note: note || DIM_LABELS[dim] });
+  saveData();
+  renderAll();
+  showToast(`${k.name} +${pts}分（${DIM_LABELS[dim]}）`, 'success');
+  document.getElementById('awardNote').value = '';
+}
+
+// ========== 英雄交互 ==========
+
+function interactHero(kidIdx, hid, action) {
+  if (!requireUnlock()) return;
+  const k = DATA.kids[kidIdx];
+  const h = k.heroes.find(h => h.id === hid);
+  if (!h) return;
+  const cost = action === 'heal' ? 5 : 3;
+  if (k.points < cost) { showToast('积分不足', 'error'); return; }
+  k.points -= cost;
+  k.pointLogs.push({ time: Date.now(), dim: 'selfctrl', pts: -cost, note: `${action === 'feed' ? '喂食' : action === 'play' ? '修炼' : action === 'clean' ? '清洁' : '治疗'}${h.name}` });
+  const gains = { feed: { h: 15, e: 0, m: 0, heal: 0 }, play: { h: 0, e: 20, m: 0, heal: 0 }, clean: { h: 0, e: 0, m: 20, heal: 0 }, heal: { h: 0, e: 0, m: 0, heal: 30 } };
+  const g = gains[action];
+  h.hunger = Math.min(100, h.hunger + g.h);
+  h.energy = Math.min(100, h.energy + g.e);
+  h.morale = Math.min(100, h.morale + g.m);
+  h.health = Math.min(100, h.health + g.heal);
+  const total = h.hunger + h.energy + h.morale + h.health;
+  const maxEvo = h.evoStages.length;
+  const newEvo = Math.min(maxEvo, Math.floor(total / (500 / maxEvo)) + 1);
+  if (newEvo > h.evolution) { h.evolution = newEvo; showToast(`${h.name} 进化到 ${h.evoStages[newEvo - 1]}！`, 'success'); }
+  saveData();
+  openHeroDetail(kidIdx, hid);
+  triggerHeroAnim(action);
+  renderAll();
+  showToast(`${action === 'feed' ? '喂食' : action === 'play' ? '修炼' : action === 'clean' ? '清洁' : '治疗'}成功！-${cost}分`, 'success');
+}
+
+function triggerHeroAnim(action) {
+  setTimeout(() => {
+    const target = document.getElementById('heroAnimTarget');
+    if (!target) return;
+    target.classList.add('anim-' + action);
+    setTimeout(() => target.classList.remove('anim-' + action), 600);
+  }, 80);
+}
+
+// ========== 英雄详情 ==========
+
+function openHeroDetail(kidIdx, hid) {
+  const k = DATA.kids[kidIdx];
+  const h = k.heroes.find(h => h.id === hid);
+  if (!h) return;
+  let html = `<h3 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <span id="heroNameDisplay_${hid}" style="cursor:pointer" onclick="startRename(${kidIdx},'${hid}')" title="改名">${h.name}</span>
+    <input id="heroNameInput_${hid}" type="text" value="${h.name}" maxlength="8"
+      style="display:none;font-size:inherit;font-weight:700;width:120px;padding:2px 6px;border:2px solid var(--myth-red);border-radius:6px;outline:none"
+      onblur="saveRename(${kidIdx},'${hid}')" onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape')cancelRename(${kidIdx},'${hid}')">
+    <span style="font-size:12px;color:var(--gray-400);cursor:pointer" onclick="startRename(${kidIdx},'${hid}')" title="改名">✏️</span>
+    <span class="rarity-tag rarity-${h.rarity}">${RARITY_COLORS[h.rarity].label}</span>
+    <span class="text-sm text-muted">${k.name}的英雄</span></h3>`;
+  html += `<div id="heroAnimTarget" style="text-align:center;margin:16px 0"><span class="hero-icon-inner">${h.imgKey ? `<img src="${getHeroImg(h.imgKey, h.evolution)}" alt="${h.name}" onerror="this.style.display='none';this.parentElement.textContent='${h.icon}'">` : h.icon}</span></div>`;
+  html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    <div><div class="flex-between text-sm mb-sm"><span>饱腹度</span><span>${h.hunger}%</span></div><div class="progress-bar"><div class="fill" style="width:${h.hunger}%;background:var(--amber)"></div></div></div>
+    <div><div class="flex-between text-sm mb-sm"><span>精力值</span><span>${h.energy}%</span></div><div class="progress-bar"><div class="fill" style="width:${h.energy}%;background:var(--blue)"></div></div></div>
+    <div><div class="flex-between text-sm mb-sm"><span>士气</span><span>${h.morale}%</span></div><div class="progress-bar"><div class="fill" style="width:${h.morale}%;background:var(--red)"></div></div></div>
+    <div><div class="flex-between text-sm mb-sm"><span>生命值</span><span>${h.health}%</span></div><div class="progress-bar"><div class="fill" style="width:${h.health}%;background:var(--green)"></div></div></div>
+  </div>`;
+  html += `<div class="grid-2 mt-md">
+    <button class="action-btn" ${k.points>=3?'':'disabled'} onclick="interactHero(${kidIdx},'${hid}','feed')">🍖 喂食<span class="cost">-3分</span></button>
+    <button class="action-btn" ${k.points>=3?'':'disabled'} onclick="interactHero(${kidIdx},'${hid}','play')">⚔️ 修炼<span class="cost">-3分</span></button>
+    <button class="action-btn" ${k.points>=3?'':'disabled'} onclick="interactHero(${kidIdx},'${hid}','clean')">🛁 清洁<span class="cost">-3分</span></button>
+    <button class="action-btn" ${k.points>=5?'':'disabled'} onclick="interactHero(${kidIdx},'${hid}','heal')">💊 治疗<span class="cost">-5分</span></button>
+  </div>`;
+  html += `<div class="mt-md"><p class="text-sm" style="font-weight:500">进化进度 · ${h.evoStages[h.evolution - 1]}</p>`;
+  html += `<div class="evo-track">`;
+  for (let i = 0; i < h.evoStages.length; i++) {
+    const cls = i < h.evolution ? 'done' : i === h.evolution ? 'current' : '';
+    html += `<div class="evo-dot ${cls}">${i < h.evolution ? '✓' : (i + 1)}</div>`;
+    if (i < h.evoStages.length - 1) html += `<div class="evo-line ${i < h.evolution ? 'done' : ''}"></div>`;
+  }
+  html += `</div><div class="flex-between text-xs text-muted">`;
+  h.evoStages.forEach((n, i) => { html += `<span style="color:${i < h.evolution ? 'var(--green)' : i === h.evolution ? 'var(--myth-red)' : ''}">${n}</span>`; });
+  html += `</div></div>`;
+  html += `<div class="mt-md"><span class="text-sm">已装备法宝：</span>`;
+  ['head', 'neck', 'back'].forEach(slot => {
+    const acc = h.accessories[slot];
+    html += `<span class="accessory-slot ${acc ? 'equipped' : ''}" style="display:inline-flex;margin:0 4px">${acc ? acc.icon : '-'}</span>`;
+  });
+  html += `</div>`;
+  html += `<div class="mt-md"><button class="btn btn-red btn-sm" onclick="releaseHero(${kidIdx},'${hid}')">释放此英雄</button>
+    <span class="text-xs text-muted" style="margin-left:8px">释放后永久消失</span></div>`;
+  document.getElementById('heroDetailContent').innerHTML = html;
+  document.getElementById('heroDetailModal').classList.add('show');
+}
+function closeHeroDetail() {
+  document.getElementById('heroDetailModal').classList.remove('show');
+  renderMyHeroes();
+}
+
+function startRename(kidIdx, hid) {
+  if (!requireUnlock()) return;
+  const display = document.getElementById('heroNameDisplay_' + hid);
+  const input = document.getElementById('heroNameInput_' + hid);
+  if (!display || !input) return;
+  display.style.display = 'none';
+  input.style.display = 'inline-block';
+  input.focus(); input.select();
+}
+function saveRename(kidIdx, hid) {
+  if (!requireUnlock()) return;
+  const display = document.getElementById('heroNameDisplay_' + hid);
+  const input = document.getElementById('heroNameInput_' + hid);
+  if (!display || !input) return;
+  const newName = input.value.trim();
+  display.style.display = ''; input.style.display = 'none';
+  if (!newName || newName === display.textContent) return;
+  const k = DATA.kids[kidIdx];
+  const h = k.heroes.find(h => h.id === hid);
+  if (!h) return;
+  h.name = newName;
+  display.textContent = newName;
+  saveData();
+  renderAll();
+  showToast(`英雄已更名为「${newName}」`, 'success');
+}
+function cancelRename(kidIdx, hid) {
+  const display = document.getElementById('heroNameDisplay_' + hid);
+  const input = document.getElementById('heroNameInput_' + hid);
+  if (!display || !input) return;
+  input.value = display.textContent;
+  display.style.display = ''; input.style.display = 'none';
+}
+
+function releaseHero(kidIdx, hid) {
+  if (!requireUnlock()) return;
+  const k = DATA.kids[kidIdx];
+  const idx = k.heroes.findIndex(h => h.id === hid);
+  if (idx === -1) return;
+  const h = k.heroes[idx];
+  if (!confirm(`确定要释放「${h.name}」吗？此操作不可撤销。`)) return;
+  k.heroes.splice(idx, 1);
+  saveData();
+  closeHeroDetail();
+  renderAll();
+  showToast(`${h.name} 已被释放`, 'info');
+}
+
+// ========== 法宝商店 ==========
+
+function buyAcc(kidIdx, hid, slot, name, price, rarity, icon) {
+  if (!requireUnlock()) return;
+  const k = DATA.kids[kidIdx];
+  if (k.points < price) { showToast('积分不足', 'error'); return; }
+  k.points -= price;
+  if (!k.ownedAccessories) k.ownedAccessories = [];
+  k.ownedAccessories.push({ name, slot, rarity, icon, price });
+  k.pointLogs.push({ time: Date.now(), dim: 'selfctrl', pts: -price, note: `购买法宝「${name}」` });
+  const h = k.heroes.find(h => h.id === hid);
+  h.accessories[slot] = { name, icon, rarity };
+  saveData();
+  renderAccessoryItems();
+  showToast(`购买「${name}」成功！`, 'success');
+}
+function equipAcc(kidIdx, hid, slot, name, rarity, icon) {
+  if (!requireUnlock()) return;
+  const k = DATA.kids[kidIdx];
+  const h = k.heroes.find(h => h.id === hid);
+  h.accessories[slot] = { name, icon, rarity };
+  saveData();
+  renderAccessoryItems();
+  showToast(`已装备「${name}」`, 'success');
+}
+function unequipAcc(kidIdx, hid, slot) {
+  if (!requireUnlock()) return;
+  const k = DATA.kids[kidIdx];
+  const h = k.heroes.find(h => h.id === hid);
+  h.accessories[slot] = null;
+  saveData();
+  renderAccessoryItems();
+  showToast('已卸下法宝', 'info');
+}
+
+function buySlot(kidIdx) {
+  const k = DATA.kids[kidIdx];
+  const cost = k.extraSlots === 0 ? 100 : k.extraSlots === 1 ? 200 : null;
+  if (!cost) { showToast('已达到最大槽位数', 'error'); return; }
+  if (k.points < cost) { showToast('积分不足', 'error'); return; }
+  k.points -= cost;
+  k.extraSlots++;
+  k.pointLogs.push({ time: Date.now(), dim: 'selfctrl', pts: -cost, note: `解锁英雄槽位(${2 + k.extraSlots}个)` });
+  saveData();
+  renderAll();
+  showToast(`解锁新槽位！(${2 + k.extraSlots}个)`, 'success');
+}
+
+function openBlindbox(boxIdx) {
+  if (!requireUnlock()) return;
+  const k = currentKid();
+  const maxSlots = 2 + k.extraSlots;
+  if (k.heroes.length >= maxSlots) { showToast('英雄槽位已满', 'error'); return; }
+  const box = BOX_TYPES[boxIdx];
+  if (k.points < box.price) { showToast('积分不足', 'error'); return; }
+  k.points -= box.price;
+  const hero = drawHero(box);
+  k.heroes.push(hero);
+  k.pointLogs.push({ time: Date.now(), dim: 'selfctrl', pts: -box.price, note: `抽取${box.name}` });
+  let html = `<div class="result-banner" style="background:${RARITY_COLORS[hero.rarity].bg}">
+    <div class="result-icon">${hero.imgKey ? `<img src="${getHeroImg(hero.imgKey, 1)}" alt="${hero.name}" onerror="this.style.display='none';this.parentElement.textContent='${hero.icon}'">` : hero.icon}</div>
+    <div class="result-name">${hero.name} <span class="rarity-tag rarity-${hero.rarity}">${RARITY_COLORS[hero.rarity].label}</span></div>
+    <p class="text-sm text-muted">${k.name} 获得了 ${RARITY_COLORS[hero.rarity].label} 英雄！</p>
+    <p class="text-xs text-muted mt-sm">${hero.evoStages[0]}</p>
+  </div>`;
+  document.getElementById('blindboxResult').innerHTML = html;
+  document.getElementById('blindboxResultModal').classList.add('show');
+  saveData();
+  renderAll();
+}
+function closeBlindboxResult() { document.getElementById('blindboxResultModal').classList.remove('show'); }
+
+// ========== UI 渲染 ==========
+
+function renderAll() {
+  // Apply locked state to panels that require unlock
+  const lockPanels = [1, 2, 3, 4, 5]; // 积分中心, 英雄商店, 法宝商店, 屏幕管理, 设置
+  lockPanels.forEach(i => {
+    const panel = document.getElementById('panel-' + i);
+    if (panel) {
+      if (PIN_LOCKED) panel.classList.add('locked');
+      else panel.classList.remove('locked');
+    }
+  });
+  updateKidSwitch();
+  renderMyHeroes();
+  renderPointsPanel();
+  renderBlindboxShop();
+  renderAccessoryShop();
+  renderScreenPanel();
+}
+
+function updateKidSwitch() {
+  DATA.kids.forEach((k, i) => {
+    document.getElementById('kidPoints' + i).textContent = '积分：' + k.points;
+  });
+  document.querySelectorAll('.kid-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === CURRENT_KID);
+  });
+}
+
+function renderMyHeroes() {
+  const k = currentKid();
+  const container = document.getElementById('myHeroesContent');
+  const maxSlots = 2 + k.extraSlots;
+  const kidClass = CURRENT_KID === 0 ? 'brother' : 'little-bro';
+  let html = `<div class="kid-panel-header ${kidClass}">
+    <div class="kid-emoji">${CURRENT_KID === 0 ? '🧑‍🎓' : '👦'}</div>
+    <div class="kid-info">
+      <div class="kid-name">${k.name}的英雄阵容</div>
+      <div class="kid-detail">${CURRENT_KID === 0 ? '四年级' : '一年级'} · 槽位 ${k.heroes.length}/${maxSlots}</div>
+    </div>
+    <div class="points-badge">⭐ ${k.points} 分</div>
+  </div>`;
+  if (k.heroes.length === 0) {
+    html += `<div class="empty-state"><div class="empty-icon">🏯</div><p>还没有英雄，去英雄商店召唤吧！</p></div>`;
+  } else {
+    html += `<div class="grid-3">`;
+    k.heroes.forEach(h => {
+      html += `<div class="hero-card" onclick="openHeroDetail(${CURRENT_KID},'${h.id}')">
+        <div class="hero-top">
+          <div class="hero-icon">${h.imgKey ? `<img src="${getHeroImg(h.imgKey, 1)}" alt="${h.name}" onerror="this.style.display='none';this.parentElement.textContent='${h.icon}'">` : h.icon}</div>
+          <div class="hero-info">
+            <div class="hero-name">${h.name}</div>
+            <div class="hero-owner">${k.name} · ${h.evoStages[h.evolution - 1]}</div>
+          </div>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-row"><span>饱腹</span><div class="bar"><div class="bar-fill" style="width:${h.hunger}%;background:var(--amber)"></div></div><span>${h.hunger}</span></div>
+          <div class="stat-row"><span>精力</span><div class="bar"><div class="bar-fill" style="width:${h.energy}%;background:var(--blue)"></div></div><span>${h.energy}</span></div>
+          <div class="stat-row"><span>士气</span><div class="bar"><div class="bar-fill" style="width:${h.morale}%;background:var(--red)"></div></div><span>${h.morale}</span></div>
+        </div>
+        <div class="hero-meta">
+          <span class="rarity-tag rarity-${h.rarity}">${RARITY_COLORS[h.rarity].label}</span>
+          <span>${h.evoStages[h.evolution - 1]}</span>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+    if (k.heroes.length < maxSlots) {
+      html += `<button class="btn btn-sm mt-sm" onclick="buySlot(${CURRENT_KID})">+ 解锁槽位（${k.extraSlots === 0 ? '100' : k.extraSlots === 1 ? '200' : '-'}分）</button>`;
+    }
+  }
+  container.innerHTML = html;
+}
+
+function renderPointsPanel() {
+  const k = currentKid();
+  document.getElementById('pointsTargetName').textContent = k.name + '（四年级）';
+  document.getElementById('awardDimension').onchange = function () {
+    const dim = this.value;
+    const ptsSelect = document.getElementById('awardPoints');
+    ptsSelect.innerHTML = '<option value="">分值</option>' + (DIM_POINTS[dim] || []).map(p => `<option value="${p}">+${p}</option>`).join('');
+  };
+  const historyDiv = document.getElementById('pointsHistory');
+  if (k.pointLogs.length === 0) {
+    historyDiv.innerHTML = '<p class="text-sm text-muted">暂无记录</p>';
+  } else {
+    let html = '<table><tr><th>时间</th><th>项目</th><th>变动</th><th>备注</th></tr>';
+    [...k.pointLogs].reverse().slice(0, 20).forEach(log => {
+      const d = new Date(log.time);
+      const timeStr = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      const dimLabel = DIM_LABELS[log.dim] || log.dim;
+      html += `<tr><td>${timeStr}</td><td>${dimLabel}</td><td style="color:${log.pts >= 0 ? 'var(--green)' : 'var(--red)'};font-weight:500">${log.pts >= 0 ? '+' : ''}${log.pts}</td><td>${log.note || ''}</td></tr>`;
+    });
+    html += '</table>';
+    historyDiv.innerHTML = html;
+  }
+}
+
+function renderBlindboxShop() {
+  const k = currentKid();
+  document.getElementById('shopTargetName').textContent = k.name + '（余额：' + k.points + '分）';
+  let html = '';
+  BOX_TYPES.forEach((box, i) => {
+    html += `<div class="blindbox-card" onclick="openBlindbox(${i})" style="background:${box.color}">
+      <div class="box-icon">${box.icon}</div>
+      <div class="box-name">${box.name}</div>
+      <div class="box-price">${box.price} 积分</div>
+      <div class="box-odds">${Object.entries(box.odds).filter(([, v]) => v > 0).map(([kk, v]) => `${RARITY_COLORS[kk].label}${v}%`).join(' · ')}</div>
+    </div>`;
+  });
+  document.getElementById('blindboxGrid').innerHTML = html;
+}
+
+function renderAccessoryShop() {
+  const k = currentKid();
+  document.getElementById('accTargetName').textContent = k.name;
+  const select = document.getElementById('accHero');
+  select.innerHTML = '<option value="">选择英雄</option>' + k.heroes.map(h => `<option value="${h.id}">${h.name}（${RARITY_COLORS[h.rarity].label}）</option>`).join('');
+  select.onchange = function () { renderAccessoryItems(); };
+  renderAccessoryItems();
+}
+
+function renderAccessoryItems() {
+  const k = currentKid();
+  const hid = document.getElementById('accHero').value;
+  if (!hid) { document.getElementById('accessoryShop').innerHTML = '<p class="text-sm text-muted">请选择英雄</p>'; return; }
+  const h = k.heroes.find(h => h.id === hid);
+  if (!h) { document.getElementById('accessoryShop').innerHTML = ''; return; }
+  if (!k.ownedAccessories) k.ownedAccessories = [];
+  let html = '<div>已装备：';
+  ['head', 'neck', 'back'].forEach(slot => {
+    const acc = h.accessories[slot];
+    html += `<span class="accessory-slot ${acc ? 'equipped' : ''}" style="display:inline-flex;margin:0 4px">${acc ? acc.icon : '-'}</span>`;
+  });
+  html += '</div><div class="grid-3 mt-md">';
+  for (const [slot, items] of Object.entries(ACCESSORIES)) {
+    html += `<div style="grid-column:1/-1;font-size:13px;font-weight:500;margin-top:8px">${slot === 'head' ? '头部' : slot === 'neck' ? '颈部' : '背部'}</div>`;
+    items.forEach(item => {
+      const owned = k.ownedAccessories.find(a => a.name === item.name && a.slot === slot);
+      const equipped = h.accessories[slot] && h.accessories[slot].name === item.name;
+      html += `<div class="shop-item">
+        <div class="item-icon">${item.icon}</div>
+        <div class="item-name">${item.name}</div>
+        <div class="item-price"><span class="rarity-tag rarity-${item.rarity}">${RARITY_COLORS[item.rarity].label}</span> · ${item.price}分</div>
+        <button class="btn btn-sm mt-sm ${equipped ? 'btn-green' : owned ? '' : 'btn-primary'}"
+          onclick="${equipped ? 'unequipAcc' : owned ? 'equipAcc' : 'buyAcc'}(${CURRENT_KID},'${hid}','${slot}','${item.name}','${item.price}','${item.rarity}','${item.icon}')"
+          ${!equipped && k.points < item.price && !owned ? 'disabled' : ''}>
+          ${equipped ? '已装备' : owned ? '装备' : '购买'}
+        </button>
+      </div>`;
+    });
+  }
+  html += '</div>';
+  document.getElementById('accessoryShop').innerHTML = html;
+}
+
+function renderScreenPanel() {
+  const k = currentKid();
+  const today = new Date().toISOString().slice(0, 10);
+  const overtime = Math.max(0, k.screenMinutesToday - k.screenQuota);
+  const remaining = Math.max(0, k.screenQuota - k.screenMinutesToday);
+  const overtimeClass = overtime > 0 ? 'danger' : remaining < 10 ? 'warning' : k.screenStreak >= 3 ? 'good' : '';
+
+  let html = `<div class="card">
+    <div class="card-header">📱 ${k.name} · 屏幕时间管理</div>
+    <div class="screen-card ${overtimeClass}">
+      <div class="flex-between mb-md">
+        <span style="font-size:16px;font-weight:600">今日配额：${k.screenQuota} 分钟</span>
+        <span style="font-size:16px;font-weight:600">已用：${k.screenMinutesToday} 分钟</span>
+      </div>
+      <div class="progress-bar mb-md" style="height:12px">
+        <div class="fill" style="width:${Math.min(100, k.screenMinutesToday / k.screenQuota * 100)}%;background:${overtime > 0 ? 'var(--red)' : 'var(--green)'}"></div>
+      </div>
+      <div class="flex-row gap-sm" style="justify-content:center;flex-wrap:wrap">
+        <span style="font-size:13px">${overtime > 0 ? `⚠️ 超时 ${overtime} 分钟` : `剩余 ${remaining} 分钟`}</span>
+      </div>
+      <div class="flex-row gap-sm mt-md" style="flex-wrap:wrap">`;
+
+  const presets = [5, 10, 15, 20, 30, 45, 60];
+  presets.forEach(m => {
+    html += `<button class="btn btn-sm" onclick="logScreenTime(${CURRENT_KID},${m})">+${m}分钟</button>`;
+  });
+  html += `</div>
+      <div class="mt-sm"><input type="number" id="customScreenMin" placeholder="自定义分钟数" style="width:120px" min="1" max="240">
+      <button class="btn btn-sm btn-primary" onclick="const v=parseInt(document.getElementById('customScreenMin').value);if(v>0)logScreenTime(${CURRENT_KID},v)">记录</button></div>
+    </div>
+  </div>`;
+
+  html += `<div class="card">
+    <div class="card-header">🎁 屏幕时间兑换</div>
+    <div class="grid-2">
+      <div class="screen-card" style="text-align:center">
+        <div style="font-size:24px">⏰</div>
+        <div style="font-weight:500;margin:4px 0">兑换 15 分钟</div>
+        <div class="text-sm text-muted">30 积分 · 每天限 1 次</div>
+        <div class="text-xs text-muted">今日已兑：${k.screenExchangesToday}/1</div>
+        <button class="btn btn-sm btn-primary mt-sm" ${k.screenExchangeFrozen ? 'disabled' : ''}
+          onclick="exchangeScreenTime(${CURRENT_KID})"
+          ${k.screenExchangesToday >= 1 || k.points < 30 ? 'disabled' : ''}>
+          ${k.screenExchangeFrozen ? '已冻结' : '兑换 30分'}
+        </button>
+        ${k.screenExchangeFrozen ? '<p class="text-xs" style="color:var(--red);margin-top:4px">连续超时3天，已冻结</p>' : ''}
+      </div>
+      <div class="screen-card" style="text-align:center">
+        <div style="font-size:24px">🎉</div>
+        <div style="font-weight:500;margin:4px 0">周末自由日 2 小时</div>
+        <div class="text-sm text-muted">100 积分 · 每周限 1 次</div>
+        <div class="text-xs text-muted">${k.screenWeekendUsed ? '本周已使用' : '需周五前兑换'}</div>
+        <button class="btn btn-sm btn-gold mt-sm"
+          onclick="exchangeWeekendFree(${CURRENT_KID})"
+          ${k.screenWeekendUsed || k.points < 100 ? 'disabled' : ''}>
+          兑换 100 分
+        </button>
+      </div>
+    </div>
+  </div>`;
+
+  html += `<div class="card">
+    <div class="card-header">📉 屏幕降级计划</div>
+    <div class="screen-phase-track">`;
+  SCREEN_PHASES.forEach((p, i) => {
+    const cls = i < k.screenPhase ? 'done' : i === k.screenPhase ? 'current' : 'future';
+    html += `<div class="phase-dot ${cls}">${i < k.screenPhase ? '✓' : (i + 1)}</div>`;
+    if (i < SCREEN_PHASES.length - 1) html += `<div class="phase-line ${i < k.screenPhase ? 'done' : ''}"></div>`;
+  });
+  html += `</div>
+    <div class="flex-between text-xs text-muted">`;
+  SCREEN_PHASES.forEach((p, i) => {
+    html += `<span style="color:${i < k.screenPhase ? 'var(--green)' : i === k.screenPhase ? 'var(--myth-red)' : ''}">${p.quota}min</span>`;
+  });
+  html += `</div>`;
+  html += `<div class="mt-md" style="font-size:12px">
+    <p>当前阶段：<strong>${k.screenPhase + 1} / ${SCREEN_PHASES.length}</strong> · 配额 ${k.screenQuota} 分钟</p>
+    <p class="text-muted">连续零超时：<strong style="color:var(--green)">${k.screenStreak}</strong> 天 | 连续超时：<strong style="color:var(--red)">${k.screenOvertimeDays}</strong> 天</p>
+    <p class="text-muted">下一阶段：${k.screenPhase < SCREEN_PHASES.length - 1 ? SCREEN_PHASES[k.screenPhase + 1].quota + '分钟 · 奖励：' + SCREEN_PHASES[k.screenPhase + 1].rewardLabel : '已达最终阶段'}</p>
+  </div>
+  </div>`;
+
+  document.getElementById('screenPanel').innerHTML = html;
+}
+
+// ========== Tab 切换 ==========
+
+function switchTab(idx) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.tab-btn[data-tab="${idx}"]`).classList.add('active');
+  document.getElementById(`panel-${idx}`).classList.add('active');
+  if (idx === 0) renderMyHeroes();
+  if (idx === 1) renderPointsPanel();
+  if (idx === 2) renderBlindboxShop();
+  if (idx === 3) renderAccessoryShop();
+  if (idx === 4) renderScreenPanel();
+}
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', function () { switchTab(parseInt(this.dataset.tab)); });
+});
+
+document.querySelectorAll('.kid-btn').forEach(btn => {
+  btn.addEventListener('click', function () {
+    CURRENT_KID = parseInt(this.dataset.kid);
+    updateKidSwitch();
+    renderAll();
+  });
+});
+
+// ========== 规则弹窗 ==========
+
+function toggleRules() {
+  const m = document.getElementById('rulesModal');
+  m.classList.toggle('show');
+}
+
+// ========== Toast ==========
+
+function showToast(msg, type) {
+  const id = 'toast_' + Date.now();
+  const div = document.createElement('div');
+  div.className = 'toast ' + type;
+  div.id = id;
+  div.textContent = msg;
+  document.getElementById('toastContainer').appendChild(div);
+  setTimeout(() => { const el = document.getElementById(id); if (el) el.remove(); }, 2200);
+}
+
+// ========== 数据导入导出 ==========
+
+function exportData() {
+  if (!requireUnlock()) return;
+  const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `family-hero-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('数据已导出', 'success');
+}
+function importData(event) {
+  if (!requireUnlock()) return;
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!imported.kids || imported.version === undefined) throw new Error('invalid');
+      DATA = { ...getDefaultData(), ...imported };
+      saveData();
+      renderAll();
+      showToast('数据导入成功！', 'success');
+    } catch (err) { showToast('文件格式错误', 'error'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+function resetAll() {
+  if (!requireUnlock()) return;
+  if (!confirm('确定要重置全部数据吗？此操作不可撤销！\n建议先导出备份。')) return;
+  if (!confirm('再次确认：重置后所有数据将清空。')) return;
+  localStorage.removeItem('family_hero_system');
+  DATA = getDefaultData();
+  saveData();
+  renderAll();
+  showToast('数据已重置', 'info');
+}
+
+// ========== 初始化 ==========
+
+async function init() {
+  loadData();
+  // ⚠️ 关键：先拉取云端数据，再执行任何会触发 saveData 的操作
+  await cloudPull();
+  // 云端同步完成后再运行每日维护
+  runMaintenance();
+  updateLockUI();
+  updateSyncUIFH();
+  renderAll();
+  // 定时检查云端更新（每60秒）
+  setInterval(cloudPull, 60000);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+setInterval(() => {
+  const today = new Date().toISOString().slice(0, 10);
+  if (DATA.lastMaintenanceDate !== today) {
+    runMaintenance();
+    renderAll();
+  }
+}, 60000);
+</script>
+</body>
+</html>
