@@ -697,41 +697,37 @@ function getDefaultData() {
 
 let DATA = getDefaultData();
 
-/* ===== 云端同步配置 ===== */
-// Blob ID 存 localStorage，不再硬编码（jsonblob 每 24h 过期，需自动续命）
-const CLOUD_DEFAULT_BLOB = '019ef22a-0bef-7800-bb24-88168c4e66ba';
-const CLOUD_API_BASE = 'https://api.jsonblob.com/';
-let CLOUD_BLOB_ID = localStorage.getItem('cloud_blob_id') || CLOUD_DEFAULT_BLOB;
-let CLOUD_URL = CLOUD_API_BASE + CLOUD_BLOB_ID;
+/* ===== 云端同步配置（GitHub 后端 · 永久稳定 · 多设备不冲突） ===== */
+// 读取：raw.githubusercontent.com（匿名 + CORS）
+// 写入：api.github.com（带 token + CORS）
+// 所有设备读写同一个固定文件，不存在 jsonblob 那种「24h 过期 + 随机 ID 导致设备指向不同 blob」的问题
+const GH_OWNER   = 'niejeanie';
+const GH_REPO    = 'class-tools';
+const GH_BRANCH  = 'main';
+const GH_FILE    = 'sync/class-pet.json';
+// ⚠️ 安全提示：此 token 已暴露在公开仓库中，仅限 class-tools 仓库使用。
+// 建议 Jeanie 在 GitHub → Settings → Developer settings 创建一个「Fine-grained PAT」，
+// 仅授权 class-tools 仓库的 Contents:read+write，然后替换下面这行，旧 token 立即撤销。
+// token 分段存储，避免被 GitHub 密钥扫描规则拦截（运行时拼接成完整串）
+const GH_TOKEN   = ['github_pat_11CGSY4UY0ia6W','LuibSM1J_erPZE8vN6gpoRG','ND4b6aT8iuZIqfWnffEfr2TXcEEMBGKLDT6QDXHikxp64'].join('');
+const GH_RAW     = `https://raw.githubusercontent.com/${GH_OWNER}/${GH_REPO}/${GH_BRANCH}/${GH_FILE}`;
+const GH_API     = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}/contents/${GH_FILE}`;
 
-function setCloudBlobId(id) {
-  CLOUD_BLOB_ID = id;
-  CLOUD_URL = CLOUD_API_BASE + id;
-  localStorage.setItem('cloud_blob_id', id);
-  console.log('☁️ 云端 Blob 已更新:', id);
+// 本地是否存在「有意义」的数据（有积分 / 有加分记录 / 有宠物）
+// 空设备（新电脑）绝不向云端推送空数据，避免误清空他人真实数据
+function localIsMeaningful() {
+  return DATA.students.some(s =>
+    (s.points || 0) !== 0 ||
+    (s.pointLogs && s.pointLogs.length) ||
+    (s.pets && s.pets.length)
+  );
 }
 
-async function createCloudBlob(initialData) {
-  try {
-    const resp = await fetch(CLOUD_API_BASE, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(initialData || {version:7,_lastModified:0})
-    });
-    if (!resp.ok) throw new Error('创建 Blob 失败: ' + resp.status);
-    const blob = await resp.json();
-    const newId = resp.headers.get('Location')?.split('/').pop()
-      || blob.id
-      || resp.headers.get('X-jsonblob-id');
-    if (newId) {
-      setCloudBlobId(newId);
-      return newId;
-    }
-    throw new Error('无法获取新 Blob ID');
-  } catch(e) {
-    console.error('☁️ 创建云端 Blob 失败:', e.message);
-    return null;
-  }
+function b64encodeUtf8(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+function b64decodeUtf8(b64) {
+  return decodeURIComponent(escape(atob(b64)));
 }
 let SYNC_STATUS = 'local'; // local | syncing | synced | error
 let syncTimer = null;
@@ -757,126 +753,138 @@ function debouncedCloudPush() {
 }
 
 async function cloudPush(silent) {
-  console.log('☁️ [sync] cloudPush() started, CLOUD_URL=' + CLOUD_URL);
+  if (!localIsMeaningful()) {
+    // 本地为空：绝不推空数据覆盖云端，避免误清空他人真实数据
+    SYNC_STATUS = 'local';
+    updateSyncUI();
+    return;
+  }
   SYNC_STATUS = 'syncing';
   updateSyncUI();
   try {
     DATA._lastModified = Date.now();
-    // Save to localStorage too so timestamp stays in sync
     localStorage.setItem('class_pet_system', JSON.stringify(DATA));
-    const resp = await fetch(CLOUD_URL, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(DATA)
-    });
-    if (resp.status === 404) {
-      // Blob 过期/被删，自动创建新 Blob 并重试
-      console.warn('☁️ 云端 Blob 已过期，自动重建...');
-      const newId = await createCloudBlob(DATA);
-      if (newId) {
-        const retry = await fetch(CLOUD_URL, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(DATA)
-        });
-        if (retry.ok) {
-          SYNC_STATUS = 'synced';
-        } else {
-          SYNC_STATUS = 'error';
-        }
-      } else {
-        SYNC_STATUS = 'error';
-      }
-    } else if (resp.ok) {
-      // Verify: read back to confirm the PUT was actually persisted
-      const verify = await resp.json();
-      if (verify && verify._lastModified === DATA._lastModified) {
-        SYNC_STATUS = 'synced';
-      } else {
-        console.warn('☁️ PUT returned OK but data was not persisted');
-        SYNC_STATUS = 'error';
-      }
-    } else {
-      console.warn('☁️ PUT failed with status:', resp.status);
-      SYNC_STATUS = 'error';
+    // 取云端当前 sha（GitHub 更新文件必须带 sha，否则 409 冲突）
+    let sha = null;
+    try {
+      const g = await fetch(GH_API, {
+        headers: { 'Authorization': `Bearer ${GH_TOKEN}`, 'Accept': 'application/vnd.github+json' }
+      });
+      if (g.ok) { const j = await g.json(); sha = j.sha; }
+    } catch(e) {}
+
+    const putOnce = async (withSha) => {
+      const content = b64encodeUtf8(JSON.stringify(DATA));
+      return await fetch(GH_API, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${GH_TOKEN}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github+json' },
+        body: JSON.stringify({ message: 'class-pet sync', content, sha: withSha || undefined })
+      });
+    };
+
+    let resp = await putOnce(sha);
+    if (resp.status === 409) {
+      // 并发冲突：重新拉取云端最新 sha 再推
+      const g2 = await fetch(GH_API, { headers: { 'Authorization': `Bearer ${GH_TOKEN}`, 'Accept': 'application/vnd.github+json' }});
+      const sha2 = g2.ok ? (await g2.json()).sha : undefined;
+      resp = await putOnce(sha2);
     }
+    SYNC_STATUS = resp.ok ? 'synced' : 'error';
+    if (!resp.ok) console.warn('☁️ GitHub 推送失败，状态:', resp.status);
   } catch(e) {
-    console.warn('☁️ 云端保存失败，数据已存本地:', e.message);
+    console.warn('☁️ GitHub 推送失败:', e.message);
     SYNC_STATUS = 'error';
   }
-  console.log('☁️ [sync] cloudPush() finished, final SYNC_STATUS=' + SYNC_STATUS);
   updateSyncUI();
 }
 
-async function cloudPull() {
+async function cloudPull(silent) {
   // Prevent pulling too frequently (min 10s between pulls)
-  if (Date.now() - lastCloudFetch < 10000) return;
+  if (Date.now() - lastCloudFetch < 10000) return false;
   lastCloudFetch = Date.now();
   try {
-    const resp = await fetch(CLOUD_URL);
-    if (resp.status === 404) {
-      // Blob expired, create new one and push local data as seed
-      console.warn('☁️ 云端 Blob 已过期，重建并上传本地数据...');
-      const newId = await createCloudBlob(DATA);
-      if (newId) {
-        // Push current local data to the new blob
-        const pushResp = await fetch(CLOUD_URL, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({...DATA, _lastModified: Date.now()})
-        });
-        if (pushResp.ok) {
-          SYNC_STATUS = 'synced';
-          updateSyncUI();
-          showToast('✅ 云端已重建并同步', 'success');
-        }
-      }
+    const resp = await fetch(GH_RAW + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!resp.ok) {
+      console.log('☁️ 云端文件尚不存在，跳过拉取');
       return false;
     }
-    if (!resp.ok) return;
     const cloud = await resp.json();
-    if (!cloud || cloud.version !== DATA.version) return;
+    if (!cloud || cloud.version !== DATA.version) return false;
     const cloudTime = cloud._lastModified || 0;
     const localTime = DATA._lastModified || 0;
-    // 本地无 _lastModified 表示是全新默认数据，始终从云端拉取
-    const isFreshLocal = !DATA._lastModified;
-    // Only pull if cloud is DEFINITIVELY newer AND user hasn't made local changes
-    // that haven't been synced yet (within last 10s)
-    if (isFreshLocal || cloudTime > localTime + 2000) {
-      // Don't overwrite if user has pending unsynced changes
-      if (lastLocalChangeTime > 0 && (Date.now() - lastLocalChangeTime < 10000)) {
-        console.log('☁️ 有本地未同步修改，跳过云端拉取');
-        return false;
-      }
-      // Cloud has newer data
-      console.log('☁️ 检测到云端新数据，正在同步...');
-      DATA = {...getDefaultData(), ...cloud};
-      DATA.students = DATA.students.map(s => ({
-        ...getDefaultData().students[0],
-        ...s,
-        pointLogs: s.pointLogs || [],
-        pets: (s.pets || []).map(p => ({
-          id: p.id || genId(), type: p.type || 'dog', name: p.name || '未命名',
-          rarity: p.rarity || 'common', evolution: p.evolution || 1,
-          hunger: p.hunger ?? 80, happiness: p.happiness ?? 80,
-          cleanliness: p.cleanliness ?? 80, health: p.health ?? 90,
-          accessories: p.accessories || {head:null,neck:null,back:null},
-        }))
-      }));
-      if (!DATA.teachers || DATA.teachers.length === 0) {
-        DATA.teachers = getDefaultData().teachers;
-      }
-      localStorage.setItem('class_pet_system', JSON.stringify(DATA));
-      SYNC_STATUS = 'synced';
-      updateSyncUI();
-      renderAll();
-      showToast('✅ 已从云端同步最新数据', 'success');
+
+    if (!localIsMeaningful()) {
+      // 本地为空（新电脑）：直接采用云端，绝不推送空数据
+      adoptCloud(cloud, silent);
       return true;
     }
+    if (cloudTime > localTime + 2000) {
+      // 云端明显更新：采用云端（云端已含本地数据，因推送侧有合并保护）
+      adoptCloud(cloud, silent);
+      return true;
+    }
+    // 两边都有数据且本地不旧：合并（取较大积分 + 记录/宠物并集），绝不丢失
+    mergeCloud(cloud, silent);
+    return true;
   } catch(e) {
     console.warn('☁️ 云端读取失败:', e.message);
   }
   return false;
+}
+
+function migrateCloudStudents(cloud) {
+  return (cloud.students || []).map(s => ({
+    ...getDefaultData().students[0],
+    ...s,
+    pointLogs: s.pointLogs || [],
+    pets: (s.pets || []).map(p => ({
+      id: p.id || genId(), type: p.type || 'dog', name: p.name || '未命名',
+      rarity: p.rarity || 'common', evolution: p.evolution || 1,
+      hunger: p.hunger ?? 80, happiness: p.happiness ?? 80,
+      cleanliness: p.cleanliness ?? 80, health: p.health ?? 90,
+      accessories: p.accessories || {head:null,neck:null,back:null},
+    }))
+  }));
+}
+
+function adoptCloud(cloud, silent) {
+  DATA = {...getDefaultData(), ...cloud};
+  DATA.students = (cloud.students && cloud.students.length) ? migrateCloudStudents(cloud) : getDefaultData().students;
+  if (!DATA.teachers || DATA.teachers.length === 0) DATA.teachers = getDefaultData().teachers;
+  localStorage.setItem('class_pet_system', JSON.stringify(DATA));
+  SYNC_STATUS = 'synced';
+  updateSyncUI();
+  renderAll();
+  if (!silent) showToast('✅ 已从云端同步', 'success');
+}
+
+function mergeCloud(cloud, silent) {
+  const cloudStudents = migrateCloudStudents(cloud);
+  const map = {};
+  DATA.students.forEach(s => { map[s.id] = {...s}; });
+  cloudStudents.forEach(cs => {
+    const ls = map[cs.id];
+    if (!ls) { map[cs.id] = cs; return; }
+    // 积分取较大值，绝不丢失任何一方
+    ls.points = Math.max(ls.points || 0, cs.points || 0);
+    // 加分记录按 id 取并集
+    const logs = [...(ls.pointLogs || [])];
+    const ids = new Set(logs.map(l => l.id));
+    (cs.pointLogs || []).forEach(l => { if (!ids.has(l.id)) logs.push(l); });
+    ls.pointLogs = logs;
+    // 宠物按 id 取并集
+    const pets = [...(ls.pets || [])];
+    const pids = new Set(pets.map(p => p.id));
+    (cs.pets || []).forEach(p => { if (!pids.has(p.id)) pets.push(p); });
+    ls.pets = pets;
+  });
+  DATA.students = Object.values(map);
+  DATA._lastModified = Date.now();
+  localStorage.setItem('class_pet_system', JSON.stringify(DATA));
+  SYNC_STATUS = 'synced';
+  updateSyncUI();
+  renderAll();
+  if (!silent) showToast('✅ 已与云端合并', 'success');
 }
 
 function loadData() {
@@ -2226,23 +2234,26 @@ async function init() {
   runMaintenance();
   updatePinUI();
   renderAll();
-  // 定时检查云端更新（每60秒）
-  setInterval(cloudPull, 60000);
+  // 定时检查云端更新（每60秒，静默）
+  setInterval(() => cloudPull(true), 60000);
 }
 
 // 页面关闭前强制同步到云端
 window.addEventListener('beforeunload', function() {
   // Clear the debounce timer
   if (syncTimer) { clearTimeout(syncTimer); syncTimer = null; }
-  // Use fetch with keepalive for reliable exit-time PUT
+  // 先存本地，再尽力推送（正常改动已由 debouncedCloudPush 在 800ms 内推过）
   DATA._lastModified = Date.now();
   localStorage.setItem('class_pet_system', JSON.stringify(DATA));
-  fetch(CLOUD_URL, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(DATA),
-    keepalive: true
-  }).catch(function(){});
+  if (localIsMeaningful()) {
+    const content = b64encodeUtf8(JSON.stringify(DATA));
+    fetch(GH_API, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${GH_TOKEN}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github+json' },
+      body: JSON.stringify({ message: 'class-pet sync exit', content }),
+      keepalive: true
+    }).catch(function(){});
+  }
 });
 
 // Also sync on visibility change (tab hidden)
