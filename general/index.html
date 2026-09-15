@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>General Tools · 通用工具</title>
+<style>
+  :root{
+    --bg:#0f1226; --panel:#1b1f3b; --panel2:#232a52;
+    --accent:#ffd54a; --accent2:#5b8cff; --ok:#3ddc84; --danger:#ff6b6b;
+    --text:#f5f6ff; --muted:#9aa0c7; --line:#2e3566;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:radial-gradient(circle at 50% -10%,#222a55 0%,var(--bg) 55%);
+    color:var(--text); min-height:100vh; padding:24px;}
+  .wrap{max-width:760px; margin:0 auto; text-align:center; padding-top:40px;}
+  h1{font-size:38px; margin:0 0 8px; letter-spacing:1px;}
+  .sub{color:var(--muted); font-size:19px; margin-bottom:36px;}
+  .card{display:block; background:var(--panel); border:1px solid var(--line); border-radius:18px;
+    padding:24px 26px; margin:16px 0; text-align:left; text-decoration:none; color:var(--text); transition:.15s;}
+  .card:hover{border-color:var(--accent); transform:translateY(-2px);}
+  .card h2{margin:0 0 6px; font-size:24px; color:var(--accent);}
+  .card p{margin:0; color:var(--muted); font-size:18px;}
+  .placeholder{background:var(--panel2); border:1px dashed var(--line); color:var(--muted);
+    border-radius:18px; padding:22px 26px; margin:16px 0; text-align:left; font-size:18px;}
+  .placeholder b{color:var(--text);}
+  .back{display:inline-block; margin-top:24px; color:var(--accent2); text-decoration:none;
+    font-weight:700; font-size:18px; padding:10px 22px; border:2px solid var(--line); border-radius:12px; transition:.15s;}
+  .back:hover{background:var(--accent2); color:#fff; border-color:var(--accent2);}
+  .foot{text-align:center; color:var(--muted); font-size:14px; margin-top:36px;}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🧰 General Tools</h1>
+    <div class="sub">通用小工具集合 · 持续扩充中</div>
+
+    <a class="card" href="../class-tools.html">
+      <h2>🎲 班级随机工具箱</h2>
+      <p>上课点名 · 值日抽签 · 随机分组 · 随机排序</p>
+    </a>
+
+    <a class="card" href="../class-pet-system.html">
+      <h2>🐾 班级宠物系统</h2>
+      <p>积分激励 · 盲盒抽宠 · 饰品装扮 · 多宠管理</p>
+    </a>
+
+    <a class="card" href="../family-hero-system.html">
+      <h2>🏯 家庭英雄联盟</h2>
+      <p>家庭激励 · 哪吒宇宙 · 屏幕时长管理</p>
+    </a>
+
+    <div class="placeholder">
+      <b>＋ 待添加</b><br>
+      这里留作通用工具位（计时器、随机转盘、二维码生成、文本小工具等）。有具体需求告诉我就加。
+    </div>
+
+    <a class="back" href="../class-tools.html">← 返回班级随机工具箱</a>
+    <div class="foot">单文件离线工具 · 数据仅存本地浏览器</div>
+  </div>
+</body>
+</html>
