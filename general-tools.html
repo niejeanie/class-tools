@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>General Tools · 随机工具箱</title>
+<style>
+  :root{
+    --bg:#0f1226; --panel:#1b1f3b; --panel2:#232a52;
+    --accent:#ffd54a; --accent2:#5b8cff; --ok:#3ddc84; --danger:#ff6b6b;
+    --text:#f5f6ff; --muted:#9aa0c7; --line:#2e3566;
+    --fs-base:20px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:radial-gradient(circle at 50% -10%,#222a55 0%,var(--bg) 55%);
+    color:var(--text); font-size:var(--fs-base); min-height:100vh;
+    padding:24px;
+  }
+  h1{font-size:34px; text-align:center; margin:0 0 4px; letter-spacing:1px;}
+  .sub{text-align:center; color:var(--muted); font-size:18px; margin-bottom:20px;}
+  .tabs{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:22px;}
+  .tab{
+    background:var(--panel); border:2px solid var(--line); color:var(--muted);
+    padding:12px 26px; border-radius:14px; font-size:20px; cursor:pointer;
+    transition:.15s; font-weight:600;
+  }
+  .tab.active{background:var(--accent); color:#1a1a1a; border-color:var(--accent);}
+  .panel{
+    background:var(--panel); border:1px solid var(--line); border-radius:18px;
+    padding:26px; max-width:920px; margin:0 auto;
+  }
+  .hidden{display:none;}
+  label{display:block; font-size:20px; margin:14px 0 8px; font-weight:600;}
+  .row{display:flex; gap:14px; flex-wrap:wrap; align-items:center;}
+  input[type=number],input[type=text],textarea,select{
+    background:var(--panel2); border:2px solid var(--line); color:var(--text);
+    border-radius:10px; padding:12px 14px; font-size:20px; font-family:inherit; width:100%;
+  }
+  textarea{min-height:120px; resize:vertical;}
+  .btn{
+    background:var(--accent2); color:#fff; border:none; border-radius:12px;
+    padding:14px 28px; font-size:22px; font-weight:700; cursor:pointer; transition:.15s;
+  }
+  .btn:hover{filter:brightness(1.1);}
+  .btn:active{transform:translateY(1px);}
+  .btn.primary{background:var(--accent); color:#1a1a1a;}
+  .btn.ghost{background:transparent; border:2px solid var(--line); color:var(--muted);}
+  .btn.sm{padding:8px 16px; font-size:17px;}
+  .btn:disabled{opacity:.4; cursor:not-allowed;}
+  .chk{display:flex; align-items:center; gap:10px; font-size:20px; cursor:pointer; margin:14px 0;}
+  .chk input{width:22px; height:22px; accent-color:var(--accent);}
+  /* 抽签结果区 */
+  .stage{
+    background:linear-gradient(135deg,#2a3170,#1a1f44);
+    border:2px solid var(--line); border-radius:18px;
+    min-height:200px; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; padding:24px; margin-top:18px; text-align:center;
+  }
+  .stage .rolling{font-size:clamp(40px,9vw,90px); font-weight:800; color:var(--accent); line-height:1.2;}
+  .stage .label{font-size:20px; color:var(--muted); margin-bottom:10px;}
+  .stage .hint{font-size:18px; color:var(--muted); margin-top:14px;}
+  .status{display:flex; gap:18px; justify-content:center; flex-wrap:wrap; margin-top:16px; font-size:20px;}
+  .status .pill{background:var(--panel2); border:1px solid var(--line); padding:10px 20px; border-radius:30px;}
+  .status .pill b{color:var(--accent);}
+  .lists{display:flex; gap:18px; flex-wrap:wrap; margin-top:20px;}
+  .lists .box{flex:1; min-width:260px; background:var(--panel2); border:1px solid var(--line); border-radius:14px; padding:16px;}
+  .lists .box h3{margin:0 0 10px; font-size:19px; color:var(--accent2);}
+  .tags{display:flex; gap:8px; flex-wrap:wrap;}
+  .tag{background:#2e3566; border:1px solid var(--line); padding:6px 12px; border-radius:20px; font-size:17px;}
+  .tag.drawn{background:#3a2a2a; border-color:#5a3a3a; color:#ffb3b3;}
+  .tag .x{margin-left:6px; cursor:pointer; color:var(--danger); font-weight:700;}
+  .tabs-sub{display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;}
+  .tabs-sub .opt{background:var(--panel2); border:2px solid var(--line); padding:10px 18px; border-radius:10px; cursor:pointer; font-size:18px;}
+  .tabs-sub .opt.active{border-color:var(--accent); color:var(--accent);}
+  .groups{display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; margin-top:18px;}
+  .group{background:var(--panel2); border:1px solid var(--line); border-radius:14px; padding:16px;}
+  .group h4{margin:0 0 10px; color:var(--accent); font-size:20px;}
+  .group ol{margin:0; padding-left:22px; font-size:18px; line-height:1.7;}
+  .foot{text-align:center; color:var(--muted); font-size:15px; margin-top:24px;}
+  .toast{position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:var(--ok); color:#0c2a17; padding:14px 28px; border-radius:12px; font-size:20px; font-weight:700; opacity:0; transition:.3s; pointer-events:none; z-index:99;}
+  .toast.show{opacity:1;}
+  .toast.err{background:var(--danger); color:#2a0c0c;}
+  #sortOut li{padding:4px 0;}
+  .topnav{display:flex; justify-content:space-between; align-items:center; max-width:920px; margin:0 auto 14px; padding:0 4px;}
+  .navbrand{font-size:16px; color:var(--muted); font-weight:600; letter-spacing:.5px;}
+  .navlink{font-size:18px; color:var(--accent2); text-decoration:none; font-weight:700; padding:8px 16px; border:2px solid var(--line); border-radius:12px; transition:.15s;}
+  .navlink:hover{background:var(--accent2); color:#fff; border-color:var(--accent2);}
+</style>
+</head>
+<body>
+  <nav class="topnav">
+    <span class="navbrand">🧰 General Tools</span>
+    <a class="navlink" href="index.html">🏠 首页</a>
+  </nav>
+  <h1>🧰 General Tools</h1>
+  <div class="sub">随机抽签 · 分组 · 排序 — 上课点名 / 值日抽签 / 发言轮流，投屏友好</div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="draw">🎯 随机抽签</div>
+    <div class="tab" data-tab="group">👥 随机分组</div>
+    <div class="tab" data-tab="sort">🔀 随机排序</div>
+    <div class="tab" data-tab="setup">⚙️ 名单设置</div>
+  </div>
+
+  <!-- 抽签 -->
+  <div class="panel" id="tab-draw">
+    <label>本次抽取数量</label>
+    <div class="row">
+      <input type="number" id="drawCount" value="1" min="1" style="max-width:160px;">
+      <span class="sub" style="margin:0;">人</span>
+    </div>
+
+    <label class="chk"><input type="checkbox" id="noReturn" checked> 抽完后从库中移除（不放回，避免重复抽到同一人）</label>
+    <label class="chk"><input type="checkbox" id="allowDup" > 允许同一次抽中重复（仅在不放回且数量>剩余时生效）</label>
+
+    <div class="row" style="margin-top:18px;">
+      <button class="btn primary" id="btnDraw">🎲 开始抽取</button>
+      <button class="btn ghost" id="btnResetDraw">🔄 重置（放回所有人）</button>
+    </div>
+
+    <div class="stage">
+      <div class="label">点击下方按钮开始</div>
+      <div class="rolling" id="rollOut">—</div>
+      <div class="hint" id="rollHint">结果将显示在这里</div>
+    </div>
+
+    <div class="status">
+      <div class="pill">总名单 <b id="stTotal">0</b></div>
+      <div class="pill">当前可抽 <b id="stPool">0</b></div>
+      <div class="pill">已抽出 <b id="stDrawn">0</b></div>
+    </div>
+
+    <div class="lists">
+      <div class="box">
+        <h3>✅ 已抽出（本次）</h3>
+        <div class="tags" id="drawnTags"><span class="tag" style="background:transparent;border:none;color:var(--muted)">暂无</span></div>
+      </div>
+      <div class="box">
+        <h3>📋 剩余可抽</h3>
+        <div class="tags" id="poolTags"><span class="tag" style="background:transparent;border:none;color:var(--muted)">暂无</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 分组 -->
+  <div class="panel hidden" id="tab-group">
+    <label>分成几组？</label>
+    <div class="row">
+      <input type="number" id="groupNum" value="4" min="1" style="max-width:160px;">
+      <span class="sub" style="margin:0;">组</span>
+      <button class="btn primary" id="btnGroup" style="margin-left:8px;">🎲 随机分组</button>
+    </div>
+    <div class="sub" style="text-align:left;margin:10px 0 0;">将按当前名单随机洗牌后尽量均分。每组人数差不超过 1。</div>
+    <div class="groups" id="groupOut"></div>
+    <div class="row" style="margin-top:16px;">
+      <button class="btn ghost sm" id="btnCopyGroups">📋 复制分组结果</button>
+    </div>
+  </div>
+
+  <!-- 随机排序 -->
+  <div class="panel hidden" id="tab-sort">
+    <div class="sub" style="text-align:left;margin:0 0 16px;">将全班名单随机打乱成一个顺序，常用于发言轮流、展示顺序、座位轮换等场景。每次点击都会重新洗牌。</div>
+    <div class="row" style="margin-top:8px;">
+      <button class="btn primary" id="btnSort">🔀 生成随机排序</button>
+      <button class="btn ghost sm" id="btnCopySort">📋 复制排序结果</button>
+    </div>
+    <ol id="sortOut" style="margin-top:18px; padding-left:28px; font-size:20px; line-height:1.9;"></ol>
+  </div>
+
+  <!-- 名单设置 -->
+  <div class="panel hidden" id="tab-setup">
+    <div class="tabs-sub">
+      <div class="opt active" data-mode="count">① 按人数生成</div>
+      <div class="opt" data-mode="list">② 粘贴名单</div>
+    </div>
+
+    <div id="mode-count">
+      <label>班级总人数</label>
+      <input type="number" id="totalCount" value="13" min="1" style="max-width:200px;">
+      <div class="sub" style="text-align:left;margin:8px 0 0;">将生成「第1位 … 第N位」，也可之后在名单模式改成真实姓名。</div>
+    </div>
+
+    <div id="mode-list" class="hidden">
+      <label>学生名单（每行一个，或用逗号/空格分隔）</label>
+      <textarea id="nameList" placeholder="张三&#10;李四&#10;王五"></textarea>
+    </div>
+
+    <div class="row" style="margin-top:18px;">
+      <button class="btn primary" id="btnLoad">💾 载入名单</button>
+      <button class="btn ghost" id="btnClear">🗑️ 清空</button>
+    </div>
+    <div class="sub" style="text-align:left;margin-top:10px;">名单会保存在本机浏览器，下次打开自动恢复。</div>
+  </div>
+
+  <div class="foot">单文件离线工具 · 数据仅存本地浏览器 · 投屏前请按 F11 全屏</div>
+  <div class="toast" id="toast"></div>
+
+<script>
+/* ================= 数据层 ================= */
+const LS_NAMES = 'class_tools_names_v1';
+let ALL = [];        // 完整名单
+let pool = [];       // 当前可抽取池（不放回时移除已抽）
+let drawn = [];      // 本次已抽出（不放回）
+
+function load(){
+  try{
+    const raw = localStorage.getItem(LS_NAMES);
+    if(raw){ ALL = JSON.parse(raw); }
+  }catch(e){ ALL = []; }
+  if(!Array.isArray(ALL)) ALL = [];
+  resetPool();
+}
+function save(){ localStorage.setItem(LS_NAMES, JSON.stringify(ALL)); }
+
+function resetPool(){
+  pool = ALL.slice();
+  drawn = [];
+  renderStatus(); renderTags();
+}
+
+/* ================= 渲染 ================= */
+const $ = id => document.getElementById(id);
+
+function renderStatus(){
+  $('stTotal').textContent = ALL.length;
+  $('stPool').textContent = pool.length;
+  $('stDrawn').textContent = drawn.length;
+}
+
+function renderTags(){
+  const dt = $('drawnTags'), pt = $('poolTags');
+  dt.innerHTML = drawn.length ? drawn.map((n,i)=>`<span class="tag drawn">${esc(n)}<span class="x" data-ri="${i}">✕</span></span>`).join('') : '<span class="tag" style="background:transparent;border:none;color:var(--muted)">暂无</span>';
+  pt.innerHTML = pool.length ? pool.map(n=>`<span class="tag">${esc(n)}</span>`).join('') : '<span class="tag" style="background:transparent;border:none;color:var(--muted)">暂无（已全部抽出）</span>';
+  dt.querySelectorAll('.x').forEach(x=>x.onclick=()=>{
+    const i=+x.dataset.ri; const back=drawn.splice(i,1)[0]; pool.push(back);
+    renderStatus(); renderTags(); toast('已放回：'+back);
+  });
+}
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+function toast(msg,err){
+  const t=$('toast'); t.textContent=msg; t.className='toast show'+(err?' err':'');
+  setTimeout(()=>t.className='toast'+(err?' err':''),1800);
+}
+
+/* ================= 抽签逻辑 ================= */
+let rolling=false;
+function draw(){
+  if(rolling) return;
+  if(pool.length===0){ toast('可抽名单已空，请先重置',true); return; }
+  const cnt = Math.max(1, parseInt($('drawCount').value)||1);
+  const noReturn = $('noReturn').checked;
+  const allowDup = $('allowDup').checked;
+
+  if(!noReturn){
+    // 放回模式：直接从池里随机抽（可能重复），不影响池
+    const picks=[];
+    for(let i=0;i<cnt;i++){ picks.push(pool[Math.floor(Math.random()*pool.length)]); }
+    showResult(picks, false);
+    return;
+  }
+  // 不放回
+  let need = cnt;
+  if(need>pool.length){
+    if(allowDup){ need = pool.length; toast('可抽人数不足，已抽完全部可抽者'); }
+    else { toast('可抽人数仅剩 '+pool.length+' 人，请在数量里改小',true); return; }
+  }
+  animateDraw(need);
+}
+
+function animateDraw(need){
+  rolling=true;
+  $('btnDraw').disabled=true;
+  const out=$('rollOut'), hint=$('rollHint');
+  hint.textContent='抽取中…';
+  let ticks=0; const total=24;
+  const timer=setInterval(()=>{
+    out.textContent = pool[Math.floor(Math.random()*pool.length)] || '—';
+    ticks++;
+    if(ticks>=total){
+      clearInterval(timer);
+      const picks=[];
+      for(let i=0;i<need;i++){
+        const idx=Math.floor(Math.random()*pool.length);
+        picks.push(pool[idx]); pool.splice(idx,1);
+      }
+      drawn.push(...picks);
+      showResult(picks, true);
+      rolling=false; $('btnDraw').disabled=false;
+      renderStatus(); renderTags();
+    }
+  },60);
+}
+
+function showResult(picks, removed){
+  const out=$('rollOut'), hint=$('rollHint');
+  if(picks.length===1){ out.textContent=picks[0]; hint.textContent= removed?'🎉 已抽出并从库中取出':'🎉 抽中（放回，可再次抽中）'; }
+  else { out.innerHTML=picks.map(p=>`<div>${esc(p)}</div>`).join(''); hint.textContent=(removed?'🎉 已抽出 '+picks.length+' 人并从库中取出':'🎉 抽中 '+picks.length+' 人'); }
+}
+
+/* ================= 分组逻辑 ================= */
+function group(){
+  if(ALL.length===0){ toast('请先在「名单设置」载入名单',true); return; }
+  const g = Math.max(1, parseInt($('groupNum').value)||1);
+  const arr = ALL.slice();
+  // Fisher-Yates 洗牌
+  for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  const base=Math.floor(arr.length/g), extra=arr.length%g;
+  const groups=Array.from({length:g},()=>[]);
+  let p=0;
+  for(let i=0;i<g;i++){ const sz=base+(i<extra?1:0); groups[i]=arr.slice(p,p+sz); p+=sz; }
+  const out=$('groupOut');
+  out.innerHTML=groups.map((m,i)=>`<div class="group"><h4>第 ${i+1} 组（${m.length}人）</h4><ol>${m.map(n=>`<li>${esc(n)}</li>`).join('')}</ol></div>`).join('');
+  out.dataset.text = groups.map((m,i)=>`第${i+1}组：${m.join('、')}`).join('\n');
+}
+function copyGroups(){
+  const t=$('groupOut').dataset.text;
+  if(!t){ toast('请先生成分组',true); return; }
+  navigator.clipboard.writeText(t).then(()=>toast('已复制分组结果')).catch(()=>toast('复制失败，请手动选择',true));
+}
+
+/* ================= 随机排序 ================= */
+function sortList(){
+  if(ALL.length===0){ toast('请先在「名单设置」载入名单',true); return; }
+  const arr=ALL.slice();
+  for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  const out=$('sortOut');
+  out.innerHTML=arr.map(n=>`<li>${esc(n)}</li>`).join('');
+  out.dataset.text=arr.map((n,i)=>(i+1)+'. '+n).join('\n');
+}
+function copySort(){
+  const t=$('sortOut').dataset.text;
+  if(!t){ toast('请先生成排序',true); return; }
+  navigator.clipboard.writeText(t).then(()=>toast('已复制排序结果')).catch(()=>toast('复制失败',true));
+}
+
+/* ================= 名单设置 ================= */
+function loadNames(){
+  const mode=document.querySelector('.tabs-sub .opt.active').dataset.mode;
+  let names=[];
+  if(mode==='count'){
+    const n=Math.max(1, parseInt($('totalCount').value)||1);
+    names=Array.from({length:n},(_,i)=>'第'+(i+1)+'位');
+  }else{
+    const raw=$('nameList').value.trim();
+    if(!raw){ toast('请填写名单',true); return; }
+    names=raw.split(/[\n,，\s]+/).map(s=>s.trim()).filter(Boolean);
+    // 去重
+    names=[...new Set(names)];
+  }
+  if(names.length===0){ toast('名单为空',true); return; }
+  ALL=names; save(); resetPool();
+  toast('已载入 '+ALL.length+' 人');
+  // 同步分组模式下的提示
+}
+function clearNames(){ ALL=[]; save(); resetPool(); $('nameList').value=''; toast('已清空名单'); }
+
+/* ================= Tab 切换 ================= */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.add('hidden'));
+  t.classList.add('active');
+  $('tab-'+t.dataset.tab).classList.remove('hidden');
+});
+document.querySelectorAll('.tabs-sub .opt').forEach(o=>o.onclick=()=>{
+  document.querySelectorAll('.tabs-sub .opt').forEach(x=>x.classList.remove('active'));
+  o.classList.add('active');
+  $('mode-count').classList.toggle('hidden', o.dataset.mode!=='count');
+  $('mode-list').classList.toggle('hidden', o.dataset.mode!=='list');
+});
+
+$('btnDraw').onclick=draw;
+$('btnResetDraw').onclick=()=>{ resetPool(); $('rollOut').textContent='—'; $('rollHint').textContent='结果将显示在这里'; toast('已重置，所有人放回'); };
+$('btnLoad').onclick=loadNames;
+$('btnClear').onclick=clearNames;
+$('btnGroup').onclick=group;
+$('btnCopyGroups').onclick=copyGroups;
+$('btnSort').onclick=sortList;
+$('btnCopySort').onclick=copySort;
+
+/* ================= 初始化 ================= */
+load();
+renderStatus(); renderTags();
+if(ALL.length===0){ // 首次进入给个示例提示
+  $('rollHint').textContent='请先在「名单设置」里载入班级名单';
+}
+</script>
+</body>
+</html>
