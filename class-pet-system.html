@@ -36,6 +36,9 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .pin-badge .dot { width: 8px; height: 8px; border-radius: 50%; }
 .pin-badge.locked .dot { background: var(--red); }
 .pin-badge.unlocked .dot { background: var(--green); }
+/* Home button (return to tool hub) */
+.home-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 6px 14px; border-radius: 20px; border: 0.5px solid var(--border); background: var(--card); color: var(--gray-600); font-weight: 500; text-decoration: none; transition: all 0.2s; }
+.home-btn:hover { border-color: var(--coral); color: var(--coral-dark); background: var(--coral-bg); }
 /* Sync status badge */
 .sync-badge { display: flex; align-items: center; gap: 4px; font-size: 11px; padding: 4px 10px; border-radius: 12px; border: 0.5px solid var(--border); font-weight: 500; cursor: pointer; transition: all 0.2s; }
 .sync-badge:hover { border-color: var(--blue); }
@@ -281,6 +284,7 @@ td { padding: 8px 12px; border-bottom: 0.5px solid var(--border); }
     <span class="sub">A1-1班 · 13人</span>
   </div>
   <div class="flex-row gap-sm">
+    <a class="home-btn" href="index.html" title="返回工具主页">🏠 首页</a>
     <button class="sync-badge sync-local" id="syncStatus" onclick="cloudPull()" title="点击手动同步">💻 本地</button>
     <button class="btn btn-sm" onclick="toggleRules()" style="background:var(--amber-bg);color:var(--amber-dark);border-color:var(--amber-dark)">📋 积分规则</button>
     <button class="pin-badge locked" id="pinBadge" style="gap:4px">
