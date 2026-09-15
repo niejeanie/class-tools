@@ -40,6 +40,9 @@ button:disabled { cursor: not-allowed; opacity: 0.5; }
 .sync-badge-fh.sync-error { border-color: #F87171; background: rgba(248,113,113,0.15); }
 .sync-badge-fh.sync-syncing { animation: syncPulse 0.8s infinite; }
 @keyframes syncPulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+/* Home button (return to tool hub) */
+.home-btn { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 6px 14px; border-radius: 20px; text-decoration: none; background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.2); transition: all 0.2s; }
+.home-btn:hover { background: rgba(255,255,255,0.25); }
 
 .kid-switch { display: flex; gap: 8px; margin-bottom: 16px; }
 .kid-btn { flex: 1; padding: 12px 20px; border: 2px solid var(--border); border-radius: var(--radius); background: var(--card); font-size: 15px; font-weight: 500; transition: all 0.2s; text-align: center; }
@@ -243,6 +246,7 @@ td { padding: 8px 12px; border-bottom: 0.5px solid var(--border); }
     <span class="sub">Wilson & Leo · 神话英雄收集</span>
   </div>
   <div class="header-actions">
+    <a class="home-btn" href="index.html" title="返回工具主页">🏠 首页</a>
     <button class="sync-badge-fh sync-local" id="syncStatusFH" onclick="cloudPull()" title="点击手动同步">💻 本地</button>
     <button class="lock-btn" id="lockBtn" onclick="toggleLock()">🔒 家长解锁</button>
     <button onclick="toggleRules()">📋 积分规则</button>
