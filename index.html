@@ -3,28 +3,56 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jeanie 的班级工具</title>
+<title>Class Tools · 工具中心</title>
 <style>
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 640px; margin: 60px auto; padding: 20px; background: #f0f4f8; }
-  h1 { font-size: 28px; color: #2d3748; text-align: center; }
-  .card { background: white; border-radius: 16px; padding: 32px; margin: 24px 0; box-shadow: 0 2px 12px rgba(0,0,0,0.08); text-align: center; }
-  .card h2 { margin: 0 0 12px 0; font-size: 22px; }
-  .card p { color: #718096; margin: 0 0 20px 0; line-height: 1.6; }
-  .btn { display: inline-block; padding: 12px 32px; background: #4a6cf7; color: white; text-decoration: none; border-radius: 8px; font-size: 16px; font-weight: 600; transition: background 0.2s; }
-  .btn:hover { background: #3651d5; }
+  :root{
+    --bg:#0f1226; --panel:#1b1f3b; --panel2:#232a52;
+    --accent:#ffd54a; --accent2:#5b8cff; --ok:#3ddc84; --danger:#ff6b6b;
+    --text:#f5f6ff; --muted:#9aa0c7; --line:#2e3566;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:radial-gradient(circle at 50% -10%,#222a55 0%,var(--bg) 55%);
+    color:var(--text); min-height:100vh; padding:48px 24px;}
+  .wrap{max-width:1000px; margin:0 auto;}
+  h1{font-size:42px; text-align:center; margin:0 0 8px; letter-spacing:1px;}
+  .sub{text-align:center; color:var(--muted); font-size:19px; margin-bottom:48px;}
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:24px;}
+  .tile{
+    background:var(--panel); border:1px solid var(--line); border-radius:24px;
+    padding:40px 26px; text-align:center; text-decoration:none; color:var(--text);
+    transition:.18s; display:flex; flex-direction:column; align-items:center; gap:16px;
+  }
+  .tile:hover{border-color:var(--accent); transform:translateY(-4px); box-shadow:0 12px 34px rgba(0,0,0,.38);}
+  .tile .ico{font-size:68px; line-height:1;}
+  .tile .name{font-size:25px; font-weight:800; color:var(--accent);}
+  .tile .desc{font-size:16px; color:var(--muted); line-height:1.55;}
+  .foot{text-align:center; color:var(--muted); font-size:14px; margin-top:52px;}
 </style>
 </head>
 <body>
-<h1>🐾 Jeanie 的班级工具</h1>
-<div class="card">
-  <h2>🏫 班级宠物系统</h2>
-  <p>A-Level 班级积分激励 · 宠物养成</p>
-  <a class="btn" href="class-pet-system.html">进入系统</a>
-</div>
-<div class="card">
-  <h2>🏯 家庭英雄联盟</h2>
-  <p>家庭积分激励 · 神话英雄养成</p>
-  <a class="btn" href="family-hero-system.html">进入系统</a>
-</div>
+  <div class="wrap">
+    <h1>🧰 Class Tools</h1>
+    <div class="sub">班级 &amp; 家庭工具中心 · 点击图标进入</div>
+    <div class="grid">
+      <a class="tile" href="class-pet-system.html">
+        <div class="ico">🐾</div>
+        <div class="name">班级宠物系统</div>
+        <div class="desc">积分激励 · 盲盒抽宠 · 饰品装扮 · 多宠管理</div>
+      </a>
+      <a class="tile" href="family-hero-system.html">
+        <div class="ico">🏯</div>
+        <div class="name">家庭英雄联盟</div>
+        <div class="desc">家庭激励 · 哪吒宇宙 · 屏幕时长管理</div>
+      </a>
+      <a class="tile" href="general/">
+        <div class="ico">🎲</div>
+        <div class="name">General Tools</div>
+        <div class="desc">上课点名 · 值日抽签 · 随机分组 · 随机排序</div>
+      </a>
+    </div>
+    <div class="foot">单文件离线工具 · 数据仅存本地浏览器</div>
+  </div>
 </body>
 </html>
